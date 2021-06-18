@@ -9,7 +9,7 @@
 #include <memory>
 
 namespace my_rest_client {
-	FolderWatcher::FolderWatcher() : thread_future_{}, stop_watching_event_(NULL) {
+	FolderWatcher::FolderWatcher() : thread_future_{}, stop_watching_event_(NULL), watch_folder_() {
 	}
 
 	FolderWatcher::~FolderWatcher() {
@@ -28,29 +28,42 @@ namespace my_rest_client {
 		if (NULL != stop_watching_event_) {
 			SetEvent(stop_watching_event_);
 			thread_future_.wait();
+			watch_folder_.clear();
 		}
 	}
 
-	bool FolderWatcher::StartWatching(const std::wstring& folder_path) {
+	bool FolderWatcher::StartWatching(const std::wstring& watch_folder) {
 		if (IsRunning()) {
 			return false;
 		}
 
-		std::optional<std::shared_ptr<void>> result = InitWatching(folder_path);
+		std::optional<std::shared_ptr<void>> result = InitWatching(watch_folder);
 		if (!result.has_value()) {
 			return false;
 		}
 
-		std::shared_ptr<void> folder_handle = result.value();
+		watch_folder_ = watch_folder;
+		auto folder_handle = result.value();
 
 		thread_future_ = std::async(std::launch::async, &FolderWatcher::WatchingDirectory, this, folder_handle);
 
 		return true;
 	}	
 
-	std::optional<std::shared_ptr<void>> FolderWatcher::InitWatching(const std::wstring& folder_path) {
+	std::optional<std::shared_ptr<void>> FolderWatcher::InitWatching(const std::wstring& watch_folder_) {
+		DWORD attribute = GetFileAttributes(watch_folder_.c_str());
+		if (INVALID_FILE_ATTRIBUTES == attribute) {
+			std::wcerr << L"GetFileAttributes Fail!\n";
+			return std::nullopt;
+		}
+
+		if (0 == (attribute & FILE_ATTRIBUTE_DIRECTORY)) {
+			std::wcerr << L"No Folder!\n";
+			return std::nullopt;  // 폴더가 아니면 감시하지 않음
+		}
+
 		HANDLE handle = CreateFile(
-			folder_path.c_str(),
+			watch_folder_.c_str(),
 			FILE_LIST_DIRECTORY,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			NULL,
@@ -59,7 +72,7 @@ namespace my_rest_client {
 			0);
 		
 		if (INVALID_HANDLE_VALUE == handle) {
-			std::cerr << "CreateFile Fail!\n";
+			std::wcerr << L"CreateFile Fail!\n";
 			return std::nullopt;
 		}
 
@@ -73,7 +86,7 @@ namespace my_rest_client {
 
 		stop_watching_event_ = CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (NULL == stop_watching_event_) {
-			std::cerr << "CreateEvent Fail!\n";
+			std::wcerr << L"CreateEvent Fail!\n";
 			return std::nullopt;
 		}
 
@@ -91,7 +104,7 @@ namespace my_rest_client {
 		OVERLAPPED overlap{ 0, };
 		overlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (NULL == overlap.hEvent) {
-			std::cerr << "CreateEvent Fail!\n";
+			std::wcerr << L"CreateEvent Fail!\n";
 			return;
 		}
 
@@ -120,39 +133,42 @@ namespace my_rest_client {
 				0);
 
 			if (!result) {
-				std::cerr << "ReadDirectoryChange Fail!\n";
+				std::wcerr << L"ReadDirectoryChange Fail!\n";
 				break;
 			}
 
 			DWORD signal = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 			if (WAIT_OBJECT_0 == signal) {
 				if (!GetOverlappedResult(folder_handle, &overlap, &bytes_returned, FALSE)) {
-					std::cerr << "GetOverlappedResult Fail!\n";
+					std::wcerr << L"GetOverlappedResult Fail!\n";
 					break;
 				}
 
-				FILE_NOTIFY_INFORMATION* fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(buffer.get());
+				DWORD offset = 0;
+				FILE_NOTIFY_INFORMATION* fni = nullptr;
 
 				do {
+					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer.get()[offset]);
+
 					switch (fni->Action) {
 					case FILE_ACTION_ADDED: {
-						std::cout << "FILE_ACTION_ADDED\n";
+						std::wcout << L"FILE_ACTION_ADDED\n";
 						break;
 					}
 					case FILE_ACTION_REMOVED: {
-						std::cout << "FILE_ACTION_REMOVED\n";
+						std::wcout << L"FILE_ACTION_REMOVED\n";
 						break;
 					}
 					case FILE_ACTION_MODIFIED: {
-						std::cout << "FILE_ACTION_MODIFIED\n";
+						std::wcout << L"FILE_ACTION_MODIFIED\n";
 						break;
 					}
 					case FILE_ACTION_RENAMED_OLD_NAME: {
-						std::cout << "FILE_ACTION_RENAMED_OLD_NAME\n";
+						std::wcout << L"FILE_ACTION_RENAMED_OLD_NAME\n";
 						break;
 					}
 					case FILE_ACTION_RENAMED_NEW_NAME: {
-						std::cout << "FILE_ACTION_RENAMED_NEW_NAME\n";
+						std::wcout << L"FILE_ACTION_RENAMED_NEW_NAME\n";
 						break;
 					}
 					default: {
@@ -160,18 +176,18 @@ namespace my_rest_client {
 					}
 					}
 
-					std::wstring name(fni->FileName, fni->FileNameLength);
-					std::wcout << name;
+					std::wstring name(fni->FileName, fni->FileNameLength / 2);
+					std::wcout << name << std::endl;
 
-					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(reinterpret_cast<BYTE*>(fni) + fni->NextEntryOffset);
-				} while (fni->NextEntryOffset > 0);
+					offset += fni->NextEntryOffset;
+				} while (fni->NextEntryOffset != 0);
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
-				std::cout << "User cancel!\n";
+				std::wcout << L"User cancel!\n";
 				break;
 			}
 			else {
-				std::cerr << "WaitForMultipleObjects Fail!\n";
+				std::wcerr << L"WaitForMultipleObjects Fail!\n";
 				break;
 			}	
 		}
