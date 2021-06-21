@@ -163,3 +163,6 @@ x64/Debug/rest_client.tlog/Lib-link.write.1.tlog
 x64/Debug/rest_client.tlog/Lib.command.1.tlog
 x64/Debug/rest_client_test.exe
 x64/Debug/rest_client_test.ilk
+*.ipch
+*.testlog
+*.obj

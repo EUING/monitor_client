@@ -1,24 +1,24 @@
 #ifndef REST_CLIENT_FOLDER_WATCHER_H_
 #define REST_CLIENT_FOLDER_WATCHER_H_
 
-#include <windows.h>
+#include <Windows.h>
 
 #include <future>
 #include <optional>
-#include <queue>
-#include <utility>
 #include <string>
+
+#include "change_info_queue.h"
 
 namespace my_rest_client {
 	class FolderWatcher {
 	public:
-		FolderWatcher(std::queue<std::pair<DWORD, std::wstring>>* change_info, const std::wstring& watch_folder = L"");
+		FolderWatcher(ChangeInfoQueue* change_info, const std::wstring& watch_folder = L"");
 
 		FolderWatcher(const FolderWatcher&) = delete;
 		FolderWatcher& operator=(const FolderWatcher&) = delete;
 
-		FolderWatcher(FolderWatcher&&);
-		FolderWatcher& operator=(FolderWatcher&&);
+		FolderWatcher(FolderWatcher&&) = delete;
+		FolderWatcher& operator=(FolderWatcher&&) = delete;
 
 		~FolderWatcher();
 
@@ -36,7 +36,7 @@ namespace my_rest_client {
 		std::future<void> thread_future_;
 		HANDLE stop_watching_event_;  // 감시 종료 이벤트
 		std::wstring watch_folder_;  // 감시하는 경로
-		std::queue<std::pair<DWORD, std::wstring>>* change_info_;
+		ChangeInfoQueue* change_info_;
 	};
 
 }  // namespace my_rest_client
