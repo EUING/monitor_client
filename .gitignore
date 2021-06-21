@@ -148,3 +148,8 @@ x64/Debug/vcpkg.applocal.log
 x64/Release/folder_wathcer.obj
 x64/Release/rest_client.Build.CppClean.log
 x64/Release/rest_client.lib
+.vs/rest_client/v16/ipch/AutoPCH/6ba521c80f21467d/CHANGE_MANAGER.ipch
+.vs/rest_client/v16/ipch/AutoPCH/f996a73b57f089b7/CHANGE_MANAGER.ipch
+.vs/rest_client/v16/TestStore/0/001.testlog
+x64/Release/change_manager.obj
+x64/Debug/change_manager.obj
