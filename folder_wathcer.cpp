@@ -61,28 +61,32 @@ namespace my_rest_client {
 			return false;
 		}
 
-		std::optional<std::shared_ptr<void>> result = InitWatching();
-		if (!result.has_value()) {
+		std::shared_ptr<void> folder_handle_ptr;
+		std::shared_ptr<void> overlap_handle_ptr;
+
+		if (!InitWatching(folder_handle_ptr, overlap_handle_ptr)) {
 			return false;
 		}
 
-		auto folder_handle = result.value();
-
-		thread_future_ = std::async(std::launch::async, &FolderWatcher::WatchingDirectory, this, folder_handle);
+		thread_future_ = std::async(std::launch::async, &FolderWatcher::WatchingDirectory, this, folder_handle_ptr, overlap_handle_ptr);
+		if (std::future_status::timeout != thread_future_.wait_for(std::chrono::milliseconds(100))) {
+			// thread deferred 여부 확인 및 thread가 준비 완료될 때까지 대기
+			return false;
+		}
 
 		return true;
 	}	
 
-	std::optional<std::shared_ptr<void>> FolderWatcher::InitWatching() {
+	bool FolderWatcher::InitWatching(std::shared_ptr<void>& folder_handle_ptr, std::shared_ptr<void>& overlap_event_ptr) {
 		DWORD attribute = GetFileAttributes(watch_folder_.c_str());
 		if (INVALID_FILE_ATTRIBUTES == attribute) {
 			std::wcerr << L"GetFileAttributes Fail!\n";
-			return std::nullopt;
+			return false;
 		}
 
 		if (0 == (attribute & FILE_ATTRIBUTE_DIRECTORY)) {
 			std::wcerr << L"No Folder!\n";
-			return std::nullopt;  // 폴더가 아니면 감시하지 않음
+			return false;  // 폴더가 아니면 감시하지 않음
 		}
 
 		HANDLE folder_handle = CreateFile(
@@ -96,39 +100,20 @@ namespace my_rest_client {
 		
 		if (INVALID_HANDLE_VALUE == folder_handle) {
 			std::wcerr << L"CreateFile Fail!\n";
-			return std::nullopt;
+			return false;
 		}
 
 		auto invalid_deleter = [](HANDLE handle) {
 			if (INVALID_HANDLE_VALUE != handle)
 				CloseHandle(handle);
-
 		};
 
-		std::shared_ptr<void> folder_handle_ptr(folder_handle, invalid_deleter);
+		folder_handle_ptr = std::shared_ptr<void>(folder_handle, invalid_deleter);
 
 		stop_watching_event_ = CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (NULL == stop_watching_event_) {
 			std::wcerr << L"CreateEvent Fail!\n";
-			return std::nullopt;
-		}
-
-		return folder_handle_ptr;
-	}
-
-	void FolderWatcher::WatchingDirectory(std::shared_ptr<void> folder_handle_ptr) {
-		constexpr DWORD kBufferSize = 1024 * 1024;
-		constexpr BOOL kWatchSubtree = FALSE;				
-	    constexpr DWORD notify_filter =
-			FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
-			FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |
-			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;		
-
-		OVERLAPPED overlap{ 0, };
-		overlap.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-		if (NULL == overlap.hEvent) {
-			std::wcerr << L"CreateEvent Fail!\n";
-			return;
+			return false;
 		}
 
 		auto null_deleter = [](HANDLE handle) {
@@ -136,12 +121,45 @@ namespace my_rest_client {
 				CloseHandle(handle);
 		};
 
-		std::unique_ptr<BYTE[]> buffer = std::make_unique<BYTE[]>(kBufferSize);
-		std::unique_ptr<void, decltype(null_deleter)> overlap_handle_ptr(overlap.hEvent, null_deleter);
-		
-		HANDLE folder_handle = folder_handle_ptr.get();
+		HANDLE overlap_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if (NULL == overlap_event) {
+			std::wcerr << L"CreateEvent Fail!\n";
+			return false;
+		}
 
-		HANDLE handles[2] = { overlap_handle_ptr.get(), stop_watching_event_ };
+		overlap_event_ptr = std::shared_ptr<void>(overlap_event, null_deleter);
+
+		HANDLE ready_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+		if (NULL == ready_event) {
+			std::wcerr << L"CreateEvent Fail!\n";
+			return false;
+		}
+
+		HANDLE handles[2] = { overlap_event_ptr.get(), stop_watching_event_ };
+		DWORD signal = WaitForMultipleObjects(2, handles, FALSE, 0);
+		if (WAIT_TIMEOUT != signal) {  // handle valid check
+			std::wcerr << L"WaitForMultipleObjects Fail!\n";
+			return false;
+		}
+
+		return true;
+	}
+
+	void FolderWatcher::WatchingDirectory(std::shared_ptr<void> folder_handle_ptr, std::shared_ptr<void> overlap_event_ptr) {
+		OVERLAPPED overlap{ 0, };
+		overlap.hEvent = overlap_event_ptr.get();
+		
+		HANDLE folder_handle = folder_handle_ptr.get();		
+
+		constexpr DWORD kBufferSize = 1024 * 1024;
+		constexpr BOOL kWatchSubtree = FALSE;
+		constexpr DWORD notify_filter =
+			FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
+			FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |
+			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
+
+		std::unique_ptr<BYTE[]> buffer = std::make_unique<BYTE[]>(kBufferSize);
+		HANDLE handles[2] = { overlap_event_ptr.get(), stop_watching_event_ };
 
 		while (true) {
 			DWORD bytes_returned = 0;

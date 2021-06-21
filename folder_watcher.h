@@ -29,8 +29,8 @@ namespace my_rest_client {
 		void SetWatchFolder(const std::wstring& watch_folder) { watch_folder_ = watch_folder; }
 
 	private:
-		std::optional<std::shared_ptr<void>> InitWatching();
-		void WatchingDirectory(std::shared_ptr<void> folder_handle_ptr);
+		bool InitWatching(std::shared_ptr<void>& folder_handle_ptr, std::shared_ptr<void>& overlap_event_ptr);
+		void WatchingDirectory(std::shared_ptr<void> folder_handle_ptr, std::shared_ptr<void> overlap_event_ptr);
 		void CloseEvent();
 
 		std::future<void> thread_future_;

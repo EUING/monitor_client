@@ -153,3 +153,13 @@ x64/Release/rest_client.lib
 .vs/rest_client/v16/TestStore/0/001.testlog
 x64/Release/change_manager.obj
 x64/Debug/change_manager.obj
+.vs/rest_client/v16/TestStore/0/003.testlog
+x64/Debug/gtest.pdb
+x64/Debug/gtest_main.pdb
+x64/Debug/rest_client.idb
+x64/Debug/rest_client.lib.recipe
+x64/Debug/rest_client.tlog/Lib-link.read.1.tlog
+x64/Debug/rest_client.tlog/Lib-link.write.1.tlog
+x64/Debug/rest_client.tlog/Lib.command.1.tlog
+x64/Debug/rest_client_test.exe
+x64/Debug/rest_client_test.ilk
