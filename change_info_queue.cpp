@@ -7,15 +7,17 @@
 #include <queue>
 #include <string>
 
+#include "common_utility.h"
+
 namespace my_rest_client {
-	ChangeInfoQueue::ChangeInfoQueue(): change_info_(), change_info_m_(), change_info_cv_(), is_finish(false) {
+	ChangeInfoQueue::ChangeInfoQueue(): change_info_(), change_info_m_(), change_info_cv_(), break_(false) {
 	}
 
 	ChangeInfoQueue::~ChangeInfoQueue() {
-		Finish();
+		Break();
 	}
 
-	void ChangeInfoQueue::Push(const ChangeInfo& change_info) {
+	void ChangeInfoQueue::Push(const common_utility::ChangeInfo& change_info) {
 		std::unique_lock lock(change_info_m_);
 		change_info_.push(change_info);
 		lock.unlock();
@@ -23,23 +25,23 @@ namespace my_rest_client {
 		change_info_cv_.notify_one();
 	}
 
-	std::optional<ChangeInfo> ChangeInfoQueue::Pop() {
+	std::optional<common_utility::ChangeInfo> ChangeInfoQueue::Pop() {
 		std::unique_lock lock(change_info_m_);
 		
-		change_info_cv_.wait(lock, [this]() { return (!change_info_.empty() || is_finish); });
-		if (is_finish) {
-			is_finish = false;
+		change_info_cv_.wait(lock, [this]() { return (!change_info_.empty() || break_); });
+		if (break_) {
+			break_ = false;
 			return std::nullopt;
 		}
 
-		ChangeInfo front = change_info_.front();
+		common_utility::ChangeInfo front = change_info_.front();
 		change_info_.pop();
 
 		return front;
 	}
 
-	void ChangeInfoQueue::Finish() {
-		is_finish = true;
+	void ChangeInfoQueue::Break() {
+		break_ = true;
 		change_info_cv_.notify_all();
 	}
 }  // namespace my_rest_client

@@ -8,6 +8,7 @@
 #include <optional>
 #include <memory>
 
+#include "common_utility.h"
 #include "change_info_queue.h"
 
 namespace my_rest_client {

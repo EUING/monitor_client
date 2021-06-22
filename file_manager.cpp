@@ -4,9 +4,10 @@
 
 #include <future>
 #include <optional>
-#include <iostream>
-#include <chrono>
+#include <sstream>
+#include <iomanip>
 
+#include "common_utility.h"
 #include "change_info_queue.h"
 
 namespace my_rest_client {
@@ -24,14 +25,11 @@ namespace my_rest_client {
 		thread_future_ = std::async(std::launch::async, [this]() {
 			if (change_info_) {
 				while (true) {				
-					std::optional<ChangeInfo> pop = change_info_->Pop();
+					std::optional<common_utility::ChangeInfo> pop = change_info_->Pop();
 					if (!pop.has_value())
 						return;
 
-					ChangeInfo info = pop.value();
-					if (!Management(info)) {
-						return;
-					}
+					common_utility::ChangeInfo change_info = pop.value();
 				}
 			}
 		});
@@ -46,38 +44,12 @@ namespace my_rest_client {
 
 	void FileManager::Stop() {
 		if (IsRunning()) {
-			change_info_->Finish();
+			change_info_->Break();
 			thread_future_.wait();
 		}
 	}
 
 	bool FileManager::IsRunning() {
 		return thread_future_.valid() && std::future_status::timeout == thread_future_.wait_for(std::chrono::milliseconds(0));
-	}
-
-	bool FileManager::Management(const ChangeInfo& info) {
-		switch (info.action) {
-		case FILE_ACTION_ADDED: {
-			std::wcout << "FILE_ACTION_ADDED" << " ";
-			break;
-		}
-		case FILE_ACTION_MODIFIED: {
-			std::wcout << "FILE_ACTION_MODIFIED" << " ";
-			break;
-		}
-		case FILE_ACTION_REMOVED: {
-			std::wcout << "FILE_ACTION_REMOVED" << " ";
-			break;
-		}
-		case FILE_ACTION_RENAMED_NEW_NAME: {
-			std::wcout << "FILE_ACTION_RENAMED_NEW_NAME" << " ";
-			break;
-		}
-		default: {
-			return false;
-		}
-		}
-
-		return true;
 	}
 }  // namespace my_rest_client

@@ -8,13 +8,9 @@
 #include <queue>
 #include <string>
 
+#include "common_utility.h"
+
 namespace my_rest_client {
-	struct ChangeInfo {
-		DWORD action;
-		std::wstring full_path;
-
-	};
-
 	class ChangeInfoQueue {
 	public:
 		ChangeInfoQueue();
@@ -27,15 +23,15 @@ namespace my_rest_client {
 
 		~ChangeInfoQueue();
 
-		void Push(const ChangeInfo& change_info);
-		std::optional<ChangeInfo> Pop();
-		void Finish();
+		void Push(const common_utility::ChangeInfo& change_info);
+		std::optional<common_utility::ChangeInfo> Pop();
+		void Break();
 
 	private:
-		std::queue<ChangeInfo> change_info_;
+		std::queue<common_utility::ChangeInfo> change_info_;
 		std::mutex change_info_m_;
 		std::condition_variable change_info_cv_;
-		bool is_finish;  // Pop 함수 종료를 위한 변수
+		bool break_;  // Pop 함수 종료를 위한 변수
 	};
 }  // namespace my_rest_client
 #endif

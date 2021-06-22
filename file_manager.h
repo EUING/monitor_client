@@ -1,7 +1,9 @@
 #ifndef REST_CLIENT_FILE_MANAGER_H_
 #define REST_CLIENT_FILE_MANAGER_H_
 
+#include <optional>
 #include <future>
+#include <string>
 
 #include "change_info_queue.h"
 
@@ -23,8 +25,6 @@ namespace my_rest_client {
 		bool IsRunning();
 
 	private:
-		bool Management(const ChangeInfo& info);
-
 		std::future<void> thread_future_;
 		ChangeInfoQueue* change_info_;
 	};
