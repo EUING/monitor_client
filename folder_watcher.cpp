@@ -124,10 +124,8 @@ namespace my_rest_client {
 	}
 
 	void FolderWatcher::WatchingDirectory(std::shared_ptr<void> folder_handle_ptr, std::shared_ptr<void> overlap_event_ptr) {
-		OVERLAPPED overlap{ 0, };
-		overlap.hEvent = overlap_event_ptr.get();
-		
-		HANDLE folder_handle = folder_handle_ptr.get();		
+		HANDLE folder_handle = folder_handle_ptr.get();
+		HANDLE overlap_event = overlap_event_ptr.get();
 
 		constexpr DWORD kBufferSize = 1024 * 1024;
 		constexpr BOOL kWatchSubtree = FALSE;
@@ -137,7 +135,10 @@ namespace my_rest_client {
 			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
 
 		std::unique_ptr<BYTE[]> buffer = std::make_unique<BYTE[]>(kBufferSize);
-		HANDLE handles[2] = { overlap_event_ptr.get(), stop_watching_event_ };
+		HANDLE handles[2] = { overlap_event, stop_watching_event_ };
+
+		OVERLAPPED overlap{ 0, };
+		overlap.hEvent = overlap_event;
 
 		while (true) {
 			DWORD bytes_returned = 0;
@@ -179,13 +180,14 @@ namespace my_rest_client {
 
 						std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
 						std::wstring new_full_path = watch_folder_ + L"\\" + new_name;
-						full_path = old_full_path + L';' + new_full_path;
+						full_path = old_full_path + L';' + new_full_path;  // 기존 파일명과 새로운 파일명을 ';'으로 구분
 					}
 					else {
 						std::wstring name(fni->FileName, fni->FileNameLength / 2);
 						full_path = watch_folder_ + L"\\" + name;
 					}
 
+					std::wclog << fni->Action << L" " << full_path;
 					if (change_info_) {
 						change_info_->Push({ fni->Action, full_path });
 					}
@@ -194,7 +196,6 @@ namespace my_rest_client {
 				} while (fni->NextEntryOffset != 0);
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
-				std::wcout << L"User cancel!\n";
 				break;
 			}
 			else {

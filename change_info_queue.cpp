@@ -12,6 +12,7 @@ namespace my_rest_client {
 	}
 
 	ChangeInfoQueue::~ChangeInfoQueue() {
+		Finish();
 	}
 
 	void ChangeInfoQueue::Push(const ChangeInfo& change_info) {
@@ -26,7 +27,8 @@ namespace my_rest_client {
 		std::unique_lock lock(change_info_m_);
 		
 		change_info_cv_.wait(lock, [this]() { return (!change_info_.empty() || is_finish); });
-		if (change_info_.empty()) {
+		if (is_finish) {
+			is_finish = false;
 			return std::nullopt;
 		}
 
