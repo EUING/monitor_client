@@ -1,6 +1,7 @@
 #include "folder_watcher.h"
 
 #include <Windows.h>
+#include <stdint.h>
 
 #include <future>
 #include <iostream>
@@ -9,11 +10,11 @@
 #include <memory>
 
 #include "common_utility.h"
-#include "change_info_queue.h"
+#include "notify_queue.h"
 
 namespace my_rest_client {
-	FolderWatcher::FolderWatcher(ChangeInfoQueue* change_info, const std::wstring& watch_folder /*= L""*/) 
-		: thread_future_{}, stop_watching_event_(NULL), change_info_(change_info), watch_folder_(watch_folder) {
+	FolderWatcher::FolderWatcher(NotifyQueue* notify_queue, const std::wstring& watch_folder /*= L""*/)
+		: thread_future_{}, stop_watching_event_(NULL), notify_queue_(notify_queue), watch_folder_(watch_folder) {
 	}
 
 	FolderWatcher::~FolderWatcher() {
@@ -135,7 +136,7 @@ namespace my_rest_client {
 			FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |
 			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
 
-		std::unique_ptr<BYTE[]> buffer = std::make_unique<BYTE[]>(kBufferSize);
+		std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(kBufferSize);
 		HANDLE handles[2] = { overlap_event, stop_watching_event_ };
 
 		OVERLAPPED overlap{ 0, };
@@ -181,7 +182,7 @@ namespace my_rest_client {
 
 						std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
 						std::wstring new_full_path = watch_folder_ + L"\\" + new_name;
-						full_path = old_full_path + L';' + new_full_path;  // 기존 파일명과 새로운 파일명을 ';'으로 구분
+						full_path = old_full_path + L':' + new_full_path;  // 기존 파일명과 새로운 파일명을 ':'으로 구분
 					}
 					else {
 						std::wstring name(fni->FileName, fni->FileNameLength / 2);
@@ -189,8 +190,8 @@ namespace my_rest_client {
 					}
 
 					std::wclog << fni->Action << L" " << full_path;
-					if (change_info_) {
-						change_info_->Push({ fni->Action, full_path });
+					if (notify_queue_) {
+						notify_queue_->Push({ fni->Action, full_path });
 					}
 
 					offset += fni->NextEntryOffset;

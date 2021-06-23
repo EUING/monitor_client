@@ -5,12 +5,12 @@
 #include <future>
 #include <string>
 
-#include "change_info_queue.h"
+#include "notify_queue.h"
 
 namespace my_rest_client {
 	class FileManager {
 	public:
-		FileManager(ChangeInfoQueue* change_info);
+		FileManager(NotifyQueue* notify_queue);
 
 		FileManager(const FileManager&) = delete;
 		FileManager& operator=(const FileManager&) = delete;
@@ -26,7 +26,7 @@ namespace my_rest_client {
 
 	private:
 		std::future<void> thread_future_;
-		ChangeInfoQueue* change_info_;
+		NotifyQueue* notify_queue_;
 	};
 }  // namespace my_rest_client
 #endif

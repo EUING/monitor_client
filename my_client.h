@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 
-#include<cpprest/http_client.h>
+#include <cpprest/http_client.h>
 
 namespace my_rest_client {
 	std::optional<std::wstring> Ping();

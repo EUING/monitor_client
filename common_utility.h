@@ -8,9 +8,14 @@
 
 namespace my_rest_client {
 namespace common_utility {
-	struct ChangeInfo {
+	struct ChangeObjectInfo {
 		DWORD action;
 		std::wstring full_path;
+	};
+
+	struct ChangeNameInfo {
+		std::wstring old_name_path;
+		std::wstring new_name_path;
 	};
 
 	struct FileInfo {
@@ -20,8 +25,9 @@ namespace common_utility {
 		std::wstring file_size;
 	};
 	
-	std::optional<FileInfo> GetFileInfo(const std::wstring& file_name);
 	std::optional<std::wstring> ConvertIsoTime(const FILETIME& time);
+	std::optional<FileInfo> GetFileInfo(const std::wstring& file_name);
+	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path);
 }  // namespace common_utility
 }  // namespace my_rest_client
 #endif

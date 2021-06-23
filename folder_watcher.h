@@ -7,12 +7,12 @@
 #include <optional>
 #include <string>
 
-#include "change_info_queue.h"
+#include "notify_queue.h"
 
 namespace my_rest_client {
 	class FolderWatcher {
 	public:
-		FolderWatcher(ChangeInfoQueue* change_info, const std::wstring& watch_folder = L"");
+		FolderWatcher(NotifyQueue* notify_queue, const std::wstring& watch_folder = L"");
 
 		FolderWatcher(const FolderWatcher&) = delete;
 		FolderWatcher& operator=(const FolderWatcher&) = delete;
@@ -36,7 +36,7 @@ namespace my_rest_client {
 		std::future<void> thread_future_;
 		HANDLE stop_watching_event_;  // 감시 종료 이벤트
 		std::wstring watch_folder_;  // 감시하는 경로
-		ChangeInfoQueue* change_info_;
+		NotifyQueue* notify_queue_;
 	};
 
 }  // namespace my_rest_client
