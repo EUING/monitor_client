@@ -14,19 +14,20 @@ namespace common_utility {
 	};
 
 	struct ChangeNameInfo {
-		std::wstring old_name_path;
-		std::wstring new_name_path;
+		std::wstring old_name;
+		std::wstring new_name;
 	};
 
 	struct FileInfo {
 		std::wstring file_name;
+		std::wstring file_size;
 		std::wstring creation_iso_time;
 		std::wstring last_modified_iso_time;
-		std::wstring file_size;
 	};
 	
+	std::optional<std::wstring> GetFileName(const std::wstring& full_path);
 	std::optional<std::wstring> ConvertIsoTime(const FILETIME& time);
-	std::optional<FileInfo> GetFileInfo(const std::wstring& file_name);
+	std::optional<FileInfo> GetFileInfo(const std::wstring& full_path);
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path);
 }  // namespace common_utility
 }  // namespace my_rest_client

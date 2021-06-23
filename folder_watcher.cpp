@@ -182,7 +182,7 @@ namespace my_rest_client {
 
 						std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
 						std::wstring new_full_path = watch_folder_ + L"\\" + new_name;
-						full_path = old_full_path + L':' + new_full_path;  // 기존 파일명과 새로운 파일명을 ':'으로 구분
+						full_path = old_full_path + L'?' + new_full_path;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
 					}
 					else {
 						std::wstring name(fni->FileName, fni->FileNameLength / 2);

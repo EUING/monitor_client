@@ -9,6 +9,25 @@
 
 namespace my_rest_client {
 namespace common_utility {
+	std::optional<std::wstring> GetFileName(const std::wstring& full_path) {
+		wchar_t drive[_MAX_DRIVE] = { 0, };
+		wchar_t dir[_MAX_DIR] = { 0, };
+		wchar_t fname[_MAX_FNAME] = { 0, };
+		wchar_t ext[_MAX_EXT] = { 0, };
+
+		errno_t result = _wsplitpath_s(full_path.c_str(), drive, dir, fname, ext);
+		if (0 != result) {
+			return std::nullopt;
+		}
+
+		std::wstring extension(ext);
+		if (extension.empty()) {
+			return std::nullopt;
+		}
+
+		return (fname + extension);
+	}
+
 	std::optional<std::wstring> ConvertIsoTime(const FILETIME& time) {
 		SYSTEMTIME utc;
 		if (!FileTimeToSystemTime(&time, &utc)) {
@@ -28,14 +47,19 @@ namespace common_utility {
 		return stream.str();
 	}
 
-	std::optional<FileInfo> GetFileInfo(const std::wstring& file_name) {
+	std::optional<FileInfo> GetFileInfo(const std::wstring& full_path) {
 		WIN32_FILE_ATTRIBUTE_DATA file_attribute;
-		if (!GetFileAttributesEx(file_name.c_str(), GetFileExInfoStandard, &file_attribute)) {
+		if (!GetFileAttributesEx(full_path.c_str(), GetFileExInfoStandard, &file_attribute)) {
 			return std::nullopt;
 		}
 
 		if (0 != (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 			return std::nullopt;  // 폴더는 제외
+		}
+
+		std::optional<std::wstring> file_name_result = GetFileName(full_path);
+		if (!file_name_result.has_value()) {
+			return std::nullopt;
 		}
 
 		std::optional<std::wstring> creation_result = ConvertIsoTime(file_attribute.ftCreationTime);
@@ -53,7 +77,7 @@ namespace common_utility {
 		li.HighPart = file_attribute.nFileSizeHigh;
 
 		FileInfo info;
-		info.file_name = file_name;
+		info.file_name = file_name_result.value();
 		info.file_size = std::to_wstring(li.QuadPart);
 		info.creation_iso_time = creation_result.value();
 		info.last_modified_iso_time = write_result.value();
@@ -66,7 +90,7 @@ namespace common_utility {
 		std::vector<std::wstring> string_buffer;
 		std::wstring name_path;
 
-		while (std::getline(full_path_stream, name_path, L':')) {
+		while (std::getline(full_path_stream, name_path, L'?')) {
 			string_buffer.push_back(name_path);
 		}
 
@@ -74,9 +98,19 @@ namespace common_utility {
 			return std::nullopt;
 		}
 
+		std::optional<std::wstring> old_name_result = GetFileName(string_buffer[0]);
+		if (!old_name_result.has_value()) {
+			return std::nullopt;
+		}
+
+		std::optional<std::wstring> new_name_result = GetFileName(string_buffer[1]);
+		if (!new_name_result.has_value()) {
+			return std::nullopt;
+		}
+
 		ChangeNameInfo info;
-		info.old_name_path = string_buffer[0];
-		info.new_name_path = string_buffer[1];
+		info.old_name = old_name_result.value();
+		info.new_name = new_name_result.value();
 
 		return info;
 	}
