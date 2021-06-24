@@ -28,7 +28,7 @@ namespace common_utility {
 		return (fname + extension);
 	}
 
-	std::optional<std::wstring> ConvertIsoTime(const FILETIME& time) {
+	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time) {
 		SYSTEMTIME utc;
 		if (!FileTimeToSystemTime(&time, &utc)) {
 			return std::nullopt;
@@ -41,7 +41,7 @@ namespace common_utility {
 
 		std::wostringstream stream;
 		const auto w2 = std::setw(2);
-		stream << std::setfill(L'0') << std::setw(4) << local_time.wYear << L'-' << w2 << local_time.wMonth << L'-' << w2 << local_time.wDay << L'T';
+		stream << std::setfill(L'0') << std::setw(4) << local_time.wYear << L'-' << w2 << local_time.wMonth << L'-' << w2 << local_time.wDay << L' ';
 		stream << w2 << local_time.wHour << L':' << w2 << local_time.wMinute << L':' << w2 << local_time.wSecond;
 
 		return stream.str();
@@ -62,12 +62,12 @@ namespace common_utility {
 			return std::nullopt;
 		}
 
-		std::optional<std::wstring> creation_result = ConvertIsoTime(file_attribute.ftCreationTime);
+		std::optional<std::wstring> creation_result = ConvertTimestamp(file_attribute.ftCreationTime);
 		if (!creation_result.has_value()) {
 			return std::nullopt;
 		}
 
-		std::optional<std::wstring> write_result = ConvertIsoTime(file_attribute.ftLastWriteTime);
+		std::optional<std::wstring> write_result = ConvertTimestamp(file_attribute.ftLastWriteTime);
 		if (!write_result.has_value()) {
 			return std::nullopt;
 		}
@@ -77,8 +77,8 @@ namespace common_utility {
 		li.HighPart = file_attribute.nFileSizeHigh;
 
 		FileInfo info;
-		info.file_name = file_name_result.value();
-		info.file_size = std::to_wstring(li.QuadPart);
+		info.name = file_name_result.value();
+		info.size = li.QuadPart;
 		info.creation_iso_time = creation_result.value();
 		info.last_modified_iso_time = write_result.value();
 

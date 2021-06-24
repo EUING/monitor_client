@@ -2,6 +2,7 @@
 #define REST_CLIENT_COMMON_UTILITY_H_
 
 #include <Windows.h>
+#include <stdint.h>
 
 #include <optional>
 #include <string>
@@ -19,14 +20,14 @@ namespace common_utility {
 	};
 
 	struct FileInfo {
-		std::wstring file_name;
-		std::wstring file_size;
+		std::wstring name;
+		int64_t size;
 		std::wstring creation_iso_time;
 		std::wstring last_modified_iso_time;
 	};
 	
 	std::optional<std::wstring> GetFileName(const std::wstring& full_path);
-	std::optional<std::wstring> ConvertIsoTime(const FILETIME& time);
+	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time);
 	std::optional<FileInfo> GetFileInfo(const std::wstring& full_path);
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path);
 }  // namespace common_utility

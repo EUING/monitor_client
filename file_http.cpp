@@ -14,8 +14,8 @@ namespace monitor_client {
 
 	bool FileHttp::AddFile(const common_utility::FileInfo & info) {
 		web::json::value post_data;
-		post_data[U("name")] = web::json::value::string(info.file_name);
-		post_data[U("size")] = web::json::value::string(info.file_size);
+		post_data[U("name")] = web::json::value::string(info.name);
+		post_data[U("size")] = web::json::value::number(info.size);
 		post_data[U("creation_time")] = web::json::value::string(info.creation_iso_time);
 		post_data[U("last_modified_time")] = web::json::value::string(info.last_modified_iso_time);
 
@@ -31,13 +31,13 @@ namespace monitor_client {
 
 	bool FileHttp::ModifyFile(const common_utility::FileInfo& info) {		
 		web::json::value patch_data;
-		patch_data[U("name")] = web::json::value::string(info.file_name);
-		patch_data[U("size")] = web::json::value::string(info.file_size);
+		patch_data[U("name")] = web::json::value::string(info.name);
+		patch_data[U("size")] = web::json::value::number(info.size);
 		patch_data[U("last_modified_time")] = web::json::value::string(info.last_modified_iso_time);
 
 		utility::string_t path_variable = kEndPoint;
 		path_variable.push_back(U('/'));
-		path_variable.append(info.file_name);
+		path_variable.append(info.name);
 
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
