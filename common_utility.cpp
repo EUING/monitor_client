@@ -79,8 +79,8 @@ namespace common_utility {
 		FileInfo info;
 		info.name = file_name_result.value();
 		info.size = li.QuadPart;
-		info.creation_iso_time = creation_result.value();
-		info.last_modified_iso_time = write_result.value();
+		info.creation_time = creation_result.value();
+		info.last_modified_time = write_result.value();
 
 		return info;
 	}

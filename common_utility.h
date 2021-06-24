@@ -22,8 +22,8 @@ namespace common_utility {
 	struct FileInfo {
 		std::wstring name;
 		int64_t size;
-		std::wstring creation_iso_time;
-		std::wstring last_modified_iso_time;
+		std::wstring creation_time;
+		std::wstring last_modified_time;
 	};
 	
 	std::optional<std::wstring> GetFileName(const std::wstring& full_path);
