@@ -22,7 +22,7 @@ namespace monitor_client {
 
 		~FolderWatcher();
 
-		bool IsRunning() { return stop_watching_event_ != NULL; }
+		bool IsRunning();
 		void StopWatching();
 		bool StartWatching();
 		std::wstring GetWatchFolder() { return watch_folder_; }

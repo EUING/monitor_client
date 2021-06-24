@@ -11,7 +11,7 @@
 #include "notify_queue.h"
 
 namespace monitor_client {
-	FileManager::FileManager(NotifyQueue* notify_queue) : thread_future_{}, notify_queue_(notify_queue) {
+	FileManager::FileManager(NotifyQueue* notify_queue, FileHttp* file_http) : thread_future_{}, notify_queue_(notify_queue), file_http_(file_http) {
 	}
 
 	FileManager::~FileManager() {
@@ -34,25 +34,36 @@ namespace monitor_client {
 					case FILE_ACTION_ADDED: {
 						std::optional<common_utility::FileInfo> result = common_utility::GetFileInfo(change_info.full_path);
 						if (result.has_value()) {
-							auto file_info = result.value();
+							if (file_http_) {
+								file_http_->AddFile(result.value());
+							}
 						}
 						break;
 					}
 					case FILE_ACTION_MODIFIED: {
 						std::optional<common_utility::FileInfo> result = common_utility::GetFileInfo(change_info.full_path);
 						if (result.has_value()) {
-							auto file_info = result.value();
+							if (file_http_) {
+								file_http_->ModifyFile(result.value());
+							}
 						}
 						break;
 					}
 					case FILE_ACTION_REMOVED: {
-						std::wstring remove_file_path = change_info.full_path;
+						std::optional<std::wstring> result = common_utility::GetFileName(change_info.full_path);
+						if (result.has_value()) {
+							if (file_http_) {
+								file_http_->RemoveFile(result.value());
+							}
+						}
 						break;
 					}
 					case FILE_ACTION_RENAMED_NEW_NAME: {
 						std::optional<common_utility::ChangeNameInfo> result = common_utility::SplitChangeName(change_info.full_path);
 						if (result.has_value()) {
-							auto name_info = result.value();
+							if (file_http_) {
+								file_http_->RenameFile(result.value());
+							}
 						}
 						break;
 					}

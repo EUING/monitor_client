@@ -6,11 +6,12 @@
 #include <string>
 
 #include "notify_queue.h"
+#include "file_http.h"
 
 namespace monitor_client {
 	class FileManager {
 	public:
-		FileManager(NotifyQueue* notify_queue);
+		FileManager(NotifyQueue* notify_queue, FileHttp* file_http);
 
 		FileManager(const FileManager&) = delete;
 		FileManager& operator=(const FileManager&) = delete;
@@ -27,6 +28,7 @@ namespace monitor_client {
 	private:
 		std::future<void> thread_future_;
 		NotifyQueue* notify_queue_;
+		FileHttp* file_http_;
 	};
 }  // namespace monitor_client
 #endif
