@@ -177,3 +177,5 @@ x64/Debug/rest_client_test.ilk
 *.pdb
 *.tlog
 *.exe
+*.ilk
+*.testdurations

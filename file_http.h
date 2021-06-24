@@ -26,10 +26,10 @@ namespace monitor_client {
 		int GetPort() { return builder_.port(); }
 		void SetPort(int port) { builder_.set_port(port); }
 
-		bool AddedFile(const common_utility::FileInfo& info);
-		bool ModifiedFile(const common_utility::FileInfo& info);
-		bool RemovedFile(const std::wstring& file_name);
-		bool RenamedFile(const common_utility::ChangeNameInfo& name_info);
+		bool AddFile(const common_utility::FileInfo& info);
+		bool ModifyFile(const common_utility::FileInfo& info);
+		bool RemoveFile(const std::wstring& file_name);
+		bool RenameFile(const common_utility::ChangeNameInfo& name_info);
 
 	private:
 		web::http::uri_builder builder_;
