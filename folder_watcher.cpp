@@ -12,7 +12,7 @@
 #include "common_utility.h"
 #include "notify_queue.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	FolderWatcher::FolderWatcher(NotifyQueue* notify_queue, const std::wstring& watch_folder /*= L""*/)
 		: thread_future_{}, stop_watching_event_(NULL), notify_queue_(notify_queue), watch_folder_(watch_folder) {
 	}
@@ -208,4 +208,4 @@ namespace my_rest_client {
 		
 		CloseEvent();
 	}
-}  // namespace my_rest_client
+}  // namespace monitor_client

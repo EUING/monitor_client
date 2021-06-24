@@ -166,3 +166,14 @@ x64/Debug/rest_client_test.ilk
 *.ipch
 *.testlog
 *.obj
+.vs/monitor_client/v16/.suo
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+*.sln
+*.lib
+*.recipe
+*.pdb
+*.tlog
+*.exe

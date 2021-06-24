@@ -10,7 +10,7 @@
 
 #include "common_utility.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	class NotifyQueue {
 	public:
 		NotifyQueue();
@@ -33,5 +33,5 @@ namespace my_rest_client {
 		std::condition_variable notify_queue_cv_;
 		bool break_;  // Pop 함수 종료를 위한 변수
 	};
-}  // namespace my_rest_client
+}  // namespace monitor_client
 #endif

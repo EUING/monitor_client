@@ -9,7 +9,7 @@
 
 #include "common_utility.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	NotifyQueue::NotifyQueue(): change_info_(), notify_queue_m_(), notify_queue_cv_(), break_(false) {
 	}
 
@@ -44,4 +44,4 @@ namespace my_rest_client {
 		break_ = true;
 		notify_queue_cv_.notify_all();
 	}
-}  // namespace my_rest_client
+}  // namespace monitor_client

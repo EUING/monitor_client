@@ -6,7 +6,7 @@
 #include <optional>
 #include <string>
 
-namespace my_rest_client {
+namespace monitor_client {
 namespace common_utility {
 	struct ChangeObjectInfo {
 		DWORD action;
@@ -30,5 +30,5 @@ namespace common_utility {
 	std::optional<FileInfo> GetFileInfo(const std::wstring& full_path);
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path);
 }  // namespace common_utility
-}  // namespace my_rest_client
+}  // namespace monitor_client
 #endif

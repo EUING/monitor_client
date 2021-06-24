@@ -7,7 +7,7 @@
 #include <sstream>
 #include <vector>
 
-namespace my_rest_client {
+namespace monitor_client {
 namespace common_utility {
 	std::optional<std::wstring> GetFileName(const std::wstring& full_path) {
 		wchar_t drive[_MAX_DRIVE] = { 0, };
@@ -116,4 +116,4 @@ namespace common_utility {
 	}
 
 }  // namespace common_utility
-}  // namespace my_rest_client
+}  // namespace monitor_client

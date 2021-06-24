@@ -10,7 +10,7 @@
 #include "common_utility.h"
 #include "notify_queue.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	FileManager::FileManager(NotifyQueue* notify_queue) : thread_future_{}, notify_queue_(notify_queue) {
 	}
 
@@ -79,4 +79,4 @@ namespace my_rest_client {
 	bool FileManager::IsRunning() {
 		return thread_future_.valid() && std::future_status::timeout == thread_future_.wait_for(std::chrono::milliseconds(0));
 	}
-}  // namespace my_rest_client
+}  // namespace monitor_client

@@ -9,7 +9,7 @@
 
 #include "notify_queue.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	class FolderWatcher {
 	public:
 		FolderWatcher(NotifyQueue* notify_queue, const std::wstring& watch_folder = L"");
@@ -39,5 +39,5 @@ namespace my_rest_client {
 		NotifyQueue* notify_queue_;
 	};
 
-}  // namespace my_rest_client
+}  // namespace monitor_client
 #endif

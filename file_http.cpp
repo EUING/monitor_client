@@ -5,7 +5,7 @@
 
 #include <cpprest/http_client.h>
 
-namespace my_rest_client {
+namespace monitor_client {
 	FileHttp::FileHttp(const std::wstring& host, int port) : builder_() {
 		builder_.set_scheme(U("http")).set_host(host).set_port(port);
 	}
@@ -86,4 +86,4 @@ namespace my_rest_client {
 
 		return true;
 	}
-}  // namespace my_rest_client
+}  // namespace monitor_client

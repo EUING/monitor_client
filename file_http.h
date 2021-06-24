@@ -7,7 +7,7 @@
 
 #include "common_utility.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	class FileHttp {
 	public:
 		FileHttp(const std::wstring& host, int port);
@@ -34,5 +34,5 @@ namespace my_rest_client {
 	private:
 		web::http::uri_builder builder_;
 	};
-}  // namespace my_rest_client
+}  // namespace monitor_client
 #endif

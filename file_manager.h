@@ -7,7 +7,7 @@
 
 #include "notify_queue.h"
 
-namespace my_rest_client {
+namespace monitor_client {
 	class FileManager {
 	public:
 		FileManager(NotifyQueue* notify_queue);
@@ -28,5 +28,5 @@ namespace my_rest_client {
 		std::future<void> thread_future_;
 		NotifyQueue* notify_queue_;
 	};
-}  // namespace my_rest_client
+}  // namespace monitor_client
 #endif
