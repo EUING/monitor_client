@@ -17,17 +17,17 @@ namespace monitor_client {
 		builder_.set_path(kEndPoint);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::GET).get();
-		if (response.status_code() != web::http::status_codes::Created) {
+		if (response.status_code() != web::http::status_codes::OK) {
 			return std::nullopt;
 		}
 
 		web::json::value json_object= response.extract_json().get();
-		if (!json_object[U("data")].is_array()) {
+		if (!json_object.is_array()) {
 			return std::nullopt;
 		}
 
 		std::vector<common_utility::FileInfo> v;
-		web::json::array arr = json_object[U("data")].as_array();
+		web::json::array arr = json_object.as_array();
 		for (auto iter : arr) {
 			if (!iter.is_object()) {
 				return std::nullopt;
@@ -54,22 +54,17 @@ namespace monitor_client {
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::GET).get();
-		if (response.status_code() != web::http::status_codes::Created) {
+		if (response.status_code() != web::http::status_codes::OK) {
 			return std::nullopt;
 		}
-
+		
 		web::json::value json_object = response.extract_json().get();
-		if (!json_object[U("data")].is_object()) {
-			return std::nullopt;
-		}
-
-		web::json::object object = json_object[U("data")].as_object();
 
 		common_utility::FileInfo info;
-		info.name = object[U("name")].as_string();
-		info.size = object[U("size")].as_integer();
-		info.creation_time = object[U("creation_time")].as_string();
-		info.last_modified_time = object[U("last_modified_time")].as_string();
+		info.name = json_object[U("name")].as_string();
+		info.size = json_object[U("size")].as_integer();
+		info.creation_time = json_object[U("creation_time")].as_string();
+		info.last_modified_time = json_object[U("last_modified_time")].as_string();
 
 		return info;
 	}
