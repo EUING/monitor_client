@@ -129,7 +129,7 @@ namespace monitor_client {
 		HANDLE overlap_event = overlap_event_ptr.get();
 
 		constexpr DWORD kBufferSize = 1024 * 1024;
-		constexpr BOOL kWatchSubtree = FALSE;
+		constexpr BOOL kWatchSubtree = TRUE;
 		constexpr DWORD notify_filter =
 			FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
 			FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |

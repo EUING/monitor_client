@@ -9,7 +9,7 @@
 
 namespace monitor_client {
 namespace common_utility {
-	std::optional<std::wstring> GetFileName(const std::wstring& full_path) {
+	std::optional<std::wstring> GetItemName(const std::wstring& full_path) {
 		wchar_t drive[_MAX_DRIVE] = { 0, };
 		wchar_t dir[_MAX_DIR] = { 0, };
 		wchar_t fname[_MAX_FNAME] = { 0, };
@@ -20,12 +20,10 @@ namespace common_utility {
 			return std::nullopt;
 		}
 
-		std::wstring extension(ext);
-		if (extension.empty()) {
-			return std::nullopt;
-		}
+		std::wstring name = fname;
+		name.append(ext);
 
-		return (fname + extension);
+		return name;
 	}
 
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time) {
@@ -47,42 +45,46 @@ namespace common_utility {
 		return stream.str();
 	}
 
-	std::optional<FileInfo> GetFileInfo(const std::wstring& full_path) {
+	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& full_path) {
 		WIN32_FILE_ATTRIBUTE_DATA file_attribute;
 		if (!GetFileAttributesEx(full_path.c_str(), GetFileExInfoStandard, &file_attribute)) {
-			return std::nullopt;
+			return {};
 		}
 
-		if (0 != (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			return std::nullopt;  // 폴더는 제외
-		}
-
-		std::optional<std::wstring> file_name_result = GetFileName(full_path);
+		std::optional<std::wstring> file_name_result = GetItemName(full_path);
 		if (!file_name_result.has_value()) {
-			return std::nullopt;
+			return {};
 		}
 
 		std::optional<std::wstring> creation_result = ConvertTimestamp(file_attribute.ftCreationTime);
 		if (!creation_result.has_value()) {
-			return std::nullopt;
+			return {};
+		}		
+
+		if (0 != (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			FolderInfo info;
+			info.name = file_name_result.value();
+			info.creation_time = creation_result.value();
+			return info;
 		}
+		else {
+			std::optional<std::wstring> write_result = ConvertTimestamp(file_attribute.ftLastWriteTime);
+			if (!write_result.has_value()) {
+				return {};
+			}
 
-		std::optional<std::wstring> write_result = ConvertTimestamp(file_attribute.ftLastWriteTime);
-		if (!write_result.has_value()) {
-			return std::nullopt;
+			ULARGE_INTEGER li;
+			li.LowPart = file_attribute.nFileSizeLow;
+			li.HighPart = file_attribute.nFileSizeHigh;
+
+			FileInfo info;
+			info.name = file_name_result.value();
+			info.size = li.QuadPart;
+			info.creation_time = creation_result.value();
+			info.last_modified_time = write_result.value();
+
+			return info;
 		}
-
-		ULARGE_INTEGER li;
-		li.LowPart = file_attribute.nFileSizeLow;
-		li.HighPart = file_attribute.nFileSizeHigh;
-
-		FileInfo info;
-		info.name = file_name_result.value();
-		info.size = li.QuadPart;
-		info.creation_time = creation_result.value();
-		info.last_modified_time = write_result.value();
-
-		return info;
 	}
 
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path) {
@@ -98,12 +100,12 @@ namespace common_utility {
 			return std::nullopt;
 		}
 
-		std::optional<std::wstring> old_name_result = GetFileName(string_buffer[0]);
+		std::optional<std::wstring> old_name_result = GetItemName(string_buffer[0]);
 		if (!old_name_result.has_value()) {
 			return std::nullopt;
 		}
 
-		std::optional<std::wstring> new_name_result = GetFileName(string_buffer[1]);
+		std::optional<std::wstring> new_name_result = GetItemName(string_buffer[1]);
 		if (!new_name_result.has_value()) {
 			return std::nullopt;
 		}
@@ -114,6 +116,5 @@ namespace common_utility {
 
 		return info;
 	}
-
 }  // namespace common_utility
 }  // namespace monitor_client

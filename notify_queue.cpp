@@ -17,7 +17,7 @@ namespace monitor_client {
 		Break();
 	}
 
-	void NotifyQueue::Push(const common_utility::ChangeObjectInfo& change_info) {
+	void NotifyQueue::Push(const common_utility::ChangeItemInfo& change_info) {
 		std::unique_lock lock(notify_queue_m_);
 		change_info_.push(change_info);
 		lock.unlock();
@@ -25,7 +25,7 @@ namespace monitor_client {
 		notify_queue_cv_.notify_one();
 	}
 
-	std::optional<common_utility::ChangeObjectInfo> NotifyQueue::Pop() {
+	std::optional<common_utility::ChangeItemInfo> NotifyQueue::Pop() {
 		std::unique_lock lock(notify_queue_m_);
 		
 		notify_queue_cv_.wait(lock, [this]() { return (!change_info_.empty() || break_); });

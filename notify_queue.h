@@ -1,5 +1,5 @@
-#ifndef REST_CLIENT_NOTIFY_QUEUE_H_
-#define REST_CLIENT_NOTIFY_QUEUE_H_
+#ifndef MONITOR_CLIENT_NOTIFY_QUEUE_H_
+#define MONITOR_CLIENT_NOTIFY_QUEUE_H_
 
 #include <Windows.h>
 
@@ -23,12 +23,12 @@ namespace monitor_client {
 
 		~NotifyQueue();
 
-		void Push(const common_utility::ChangeObjectInfo& change_info);
-		std::optional<common_utility::ChangeObjectInfo> Pop();
+		void Push(const common_utility::ChangeItemInfo& change_info);
+		std::optional<common_utility::ChangeItemInfo> Pop();
 		void Break();
 
 	private:
-		std::queue<common_utility::ChangeObjectInfo> change_info_;
+		std::queue<common_utility::ChangeItemInfo> change_info_;
 		std::mutex notify_queue_m_;
 		std::condition_variable notify_queue_cv_;
 		bool break_;  // Pop 함수 종료를 위한 변수

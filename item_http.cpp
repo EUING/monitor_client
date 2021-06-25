@@ -1,4 +1,4 @@
-#include "file_http.h"
+#include "item_http.h"
 
 #include <optional>
 #include <string>
@@ -9,11 +9,11 @@
 namespace monitor_client {
 	const wchar_t* const kEndPoint = U("/files");
 
-	FileHttp::FileHttp(const std::wstring& host, int port) : builder_() {
+	ItemHttp::ItemHttp(const std::wstring& host, int port) : builder_() {
 		builder_.set_scheme(U("http")).set_host(host).set_port(port);
 	}
 
-	std::optional<std::vector<common_utility::FileInfo>> FileHttp::GetTotalFile() {
+	std::optional<std::vector<common_utility::FileInfo>> ItemHttp::GetTotalFile() {
 		builder_.set_path(kEndPoint);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::GET).get();
@@ -46,7 +46,7 @@ namespace monitor_client {
 		return v;
 	}
 
-	std::optional<common_utility::FileInfo> FileHttp::GetFile(const std::wstring& file_name) {
+	std::optional<common_utility::FileInfo> ItemHttp::GetFile(const std::wstring& file_name) {
 		utility::string_t path_variable = kEndPoint;
 		path_variable.push_back(U('/'));
 		path_variable.append(file_name);
@@ -59,6 +59,9 @@ namespace monitor_client {
 		}
 		
 		web::json::value json_object = response.extract_json().get();
+		if (!json_object.is_object()) {
+			return std::nullopt;
+		}
 
 		common_utility::FileInfo info;
 		info.name = json_object[U("name")].as_string();
@@ -69,7 +72,22 @@ namespace monitor_client {
 		return info;
 	}
 
-	bool FileHttp::AddFile(const common_utility::FileInfo & info) {
+	bool ItemHttp::AddFolder(const common_utility::FolderInfo& info) {
+		web::json::value post_data;
+		post_data[U("name")] = web::json::value::string(info.name);
+		post_data[U("creation_time")] = web::json::value::string(info.creation_time);
+
+		builder_.set_path(U("/folders"));
+		web::http::client::http_client client(builder_.to_uri());
+		web::http::http_response response = client.request(web::http::methods::POST, U("/"), post_data).get();
+		if (response.status_code() != web::http::status_codes::Created) {
+			return false;
+		}
+
+		return true;
+	}
+
+	bool ItemHttp::AddFile(const common_utility::FileInfo & info) {
 		web::json::value post_data;
 		post_data[U("name")] = web::json::value::string(info.name);
 		post_data[U("size")] = web::json::value::number(info.size);
@@ -86,7 +104,7 @@ namespace monitor_client {
 		return true;
 	}
 
-	bool FileHttp::ModifyFile(const common_utility::FileInfo& info) {		
+	bool ItemHttp::ModifyFile(const common_utility::FileInfo& info) {		
 		web::json::value patch_data;
 		patch_data[U("name")] = web::json::value::string(info.name);
 		patch_data[U("size")] = web::json::value::number(info.size);
@@ -106,7 +124,7 @@ namespace monitor_client {
 		return true;
 	}
 
-	bool FileHttp::RemoveFile(const std::wstring& file_name) {
+	bool ItemHttp::RemoveFile(const std::wstring& file_name) {
 		utility::string_t path_variable = kEndPoint;
 		path_variable.push_back(U('/'));
 		path_variable.append(file_name);
@@ -121,7 +139,7 @@ namespace monitor_client {
 		return true;
 	}
 
-	bool FileHttp::RenameFile(const common_utility::ChangeNameInfo& name_info) {
+	bool ItemHttp::RenameFile(const common_utility::ChangeNameInfo& name_info) {
 		web::json::value patch_data;
 		patch_data[U("old_name")] = web::json::value::string(name_info.old_name);
 		patch_data[U("new_name")] = web::json::value::string(name_info.new_name);
