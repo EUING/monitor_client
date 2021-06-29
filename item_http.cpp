@@ -17,7 +17,6 @@ namespace monitor_client {
 
 	bool ItemHttp::RenameItem(const common_utility::ChangeNameInfo& name_info) {
 		web::json::value patch_data;
-		patch_data[U("old_name")] = web::json::value::string(name_info.old_name);
 		patch_data[U("new_name")] = web::json::value::string(name_info.new_name);
 
 		utility::string_t path_variable = kItemEndPoint;
@@ -51,13 +50,13 @@ namespace monitor_client {
 
 	bool ItemHttp::AddFile(const common_utility::FileInfo & info) {
 		web::json::value post_data;
-		post_data[U("name")] = web::json::value::string(info.name);
 		post_data[U("size")] = web::json::value::number(info.size);
 		post_data[U("creation_time")] = web::json::value::string(info.creation_time);
 		post_data[U("last_modified_time")] = web::json::value::string(info.last_modified_time);
 
 		utility::string_t path_variable = kFileEndPoint;
-		path_variable.append(U("/info"));
+		path_variable.append(U("/info/"));
+		path_variable.append(info.name);
 
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
@@ -71,7 +70,6 @@ namespace monitor_client {
 
 	bool ItemHttp::ModifyFile(const common_utility::FileInfo& info) {		
 		web::json::value patch_data;
-		patch_data[U("name")] = web::json::value::string(info.name);
 		patch_data[U("size")] = web::json::value::number(info.size);
 		patch_data[U("last_modified_time")] = web::json::value::string(info.last_modified_time);
 
@@ -91,11 +89,11 @@ namespace monitor_client {
 
 	bool ItemHttp::AddFolder(const common_utility::FolderInfo& info) {
 		web::json::value post_data;
-		post_data[U("name")] = web::json::value::string(info.name);
 		post_data[U("creation_time")] = web::json::value::string(info.creation_time);
 
 		utility::string_t path_variable = kFolderEndPoint;
-		path_variable.append(U("/info"));
+		path_variable.append(U("/info/"));
+		path_variable.append(info.name);
 		
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
