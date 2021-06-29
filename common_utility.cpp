@@ -9,23 +9,6 @@
 
 namespace monitor_client {
 namespace common_utility {
-	std::optional<std::wstring> GetItemName(const std::wstring& full_path) {
-		wchar_t drive[_MAX_DRIVE] = { 0, };
-		wchar_t dir[_MAX_DIR] = { 0, };
-		wchar_t fname[_MAX_FNAME] = { 0, };
-		wchar_t ext[_MAX_EXT] = { 0, };
-
-		errno_t result = _wsplitpath_s(full_path.c_str(), drive, dir, fname, ext);
-		if (0 != result) {
-			return std::nullopt;
-		}
-
-		std::wstring name = fname;
-		name.append(ext);
-
-		return name;
-	}
-
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time) {
 		SYSTEMTIME utc;
 		if (!FileTimeToSystemTime(&time, &utc)) {
@@ -45,25 +28,20 @@ namespace common_utility {
 		return stream.str();
 	}
 
-	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& full_path) {
+	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path) {
 		WIN32_FILE_ATTRIBUTE_DATA file_attribute;
-		if (!GetFileAttributesEx(full_path.c_str(), GetFileExInfoStandard, &file_attribute)) {
-			return {};
-		}
-
-		std::optional<std::wstring> file_name_result = GetItemName(full_path);
-		if (!file_name_result.has_value()) {
+		if (!GetFileAttributesEx(relative_path.c_str(), GetFileExInfoStandard, &file_attribute)) {
 			return {};
 		}
 
 		std::optional<std::wstring> creation_result = ConvertTimestamp(file_attribute.ftCreationTime);
 		if (!creation_result.has_value()) {
 			return {};
-		}		
+		}
 
 		if (0 != (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 			FolderInfo info;
-			info.name = file_name_result.value();
+			info.name = relative_path;
 			info.creation_time = creation_result.value();
 			return info;
 		}
@@ -78,7 +56,7 @@ namespace common_utility {
 			li.HighPart = file_attribute.nFileSizeHigh;
 
 			FileInfo info;
-			info.name = file_name_result.value();
+			info.name = relative_path;
 			info.size = li.QuadPart;
 			info.creation_time = creation_result.value();
 			info.last_modified_time = write_result.value();
@@ -87,12 +65,12 @@ namespace common_utility {
 		}
 	}
 
-	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path) {
-		std::wistringstream full_path_stream(full_path);
+	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path) {
+		std::wistringstream relative_path_stream(relative_path);
 		std::vector<std::wstring> string_buffer;
 		std::wstring name_path;
 
-		while (std::getline(full_path_stream, name_path, L'?')) {
+		while (std::getline(relative_path_stream, name_path, L'?')) {
 			string_buffer.push_back(name_path);
 		}
 
@@ -100,19 +78,9 @@ namespace common_utility {
 			return std::nullopt;
 		}
 
-		std::optional<std::wstring> old_name_result = GetItemName(string_buffer[0]);
-		if (!old_name_result.has_value()) {
-			return std::nullopt;
-		}
-
-		std::optional<std::wstring> new_name_result = GetItemName(string_buffer[1]);
-		if (!new_name_result.has_value()) {
-			return std::nullopt;
-		}
-
 		ChangeNameInfo info;
-		info.old_name = old_name_result.value();
-		info.new_name = new_name_result.value();
+		info.old_name = string_buffer[0];
+		info.new_name = string_buffer[1];
 
 		return info;
 	}

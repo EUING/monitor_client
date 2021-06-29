@@ -28,13 +28,13 @@ namespace monitor_client {
 		int GetPort() { return builder_.port(); }
 		void SetPort(int port) { builder_.set_port(port); }
 
-		std::optional<std::vector<common_utility::FileInfo>> GetTotalFile();
-		std::optional<common_utility::FileInfo> GetFile(const std::wstring& file_name);
-		bool AddFolder(const common_utility::FolderInfo& info);
+		bool RenameItem(const common_utility::ChangeNameInfo& name_info);
+		bool RemoveItem(const std::wstring& itme_name);
+
 		bool AddFile(const common_utility::FileInfo& info);
 		bool ModifyFile(const common_utility::FileInfo& info);
-		bool RemoveFile(const std::wstring& file_name);
-		bool RenameFile(const common_utility::ChangeNameInfo& name_info);
+		
+		bool AddFolder(const common_utility::FolderInfo& info);
 
 	private:
 		web::http::uri_builder builder_;

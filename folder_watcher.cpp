@@ -87,6 +87,11 @@ namespace monitor_client {
 			return false;
 		}
 
+		if (!SetCurrentDirectory(watch_folder_.c_str())) {
+			std::wcerr << L"SetCurrentDirectory Fail!\n";
+			return false;
+		}
+
 		auto invalid_deleter = [](HANDLE handle) {
 			if (INVALID_HANDLE_VALUE != handle)
 				CloseHandle(handle);
@@ -171,26 +176,24 @@ namespace monitor_client {
 				do {
 					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer.get()[offset]);
 
-					std::wstring full_path;
+					std::wstring result_name;
 					if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
 						std::wstring old_name(fni->FileName, fni->FileNameLength / 2);
-						std::wstring old_full_path = watch_folder_ + L"\\" + old_name;
 
 						offset += fni->NextEntryOffset;
 						fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer.get()[offset]);  // NEW_NAME을 알기 위해 offset을 증가
 
 						std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
-						std::wstring new_full_path = watch_folder_ + L"\\" + new_name;
-						full_path = old_full_path + L'?' + new_full_path;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
+						result_name = old_name + L'?' + new_name;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
 					}
 					else {
 						std::wstring name(fni->FileName, fni->FileNameLength / 2);
-						full_path = watch_folder_ + L"\\" + name;
+						result_name = name;
 					}
 
-					std::wclog << fni->Action << L" " << full_path << std::endl;
+					std::wclog << fni->Action << L" " << result_name << std::endl;
 					if (notify_queue_) {
-						notify_queue_->Push({ fni->Action, full_path });
+						notify_queue_->Push({ fni->Action, result_name });
 					}
 
 					offset += fni->NextEntryOffset;

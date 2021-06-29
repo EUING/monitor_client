@@ -57,7 +57,7 @@ namespace monitor_client {
 	void ItemManager::ManagementItem(const common_utility::ChangeItemInfo& info) {
 		switch (info.action) {
 		case FILE_ACTION_ADDED: {
-			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.full_path);
+			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.relative_path);
 			if (1 == result.index()) {
 				if (item_http_) {
 					item_http_->AddFile(std::get<common_utility::FileInfo>(result));
@@ -67,13 +67,13 @@ namespace monitor_client {
 				if (item_http_) {
 					item_http_->AddFolder(std::get<common_utility::FolderInfo>(result));
 				}
-				ManagementSubFolder(info.full_path);
+				ManagementSubFolder(info.relative_path);
 			}
 
 			break;
 		}
 		case FILE_ACTION_MODIFIED: {
-			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.full_path);
+			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.relative_path);
 			if (1 == result.index()) {
 				if (item_http_) {
 					item_http_->ModifyFile(std::get<common_utility::FileInfo>(result));
@@ -83,19 +83,17 @@ namespace monitor_client {
 			break;
 		}
 		case FILE_ACTION_REMOVED: {
-			std::optional<std::wstring> result = common_utility::GetItemName(info.full_path);
-			if (result.has_value()) {
-				if (item_http_) {
-					item_http_->RemoveFile(result.value());
-				}
-			}
+			if (item_http_) {
+				item_http_->RemoveItem(info.relative_path);
+			}			
+			
 			break;
 		}
 		case FILE_ACTION_RENAMED_NEW_NAME: {
-			std::optional<common_utility::ChangeNameInfo> result = common_utility::SplitChangeName(info.full_path);
+			std::optional<common_utility::ChangeNameInfo> result = common_utility::SplitChangeName(info.relative_path);
 			if (result.has_value()) {
 				if (item_http_) {
-					item_http_->RenameFile(result.value());
+					item_http_->RenameItem(result.value());
 				}
 			}
 			break;
@@ -103,9 +101,9 @@ namespace monitor_client {
 		}
 	}
 
-	void ItemManager::ManagementSubFolder(const std::wstring& full_path) {
+	void ItemManager::ManagementSubFolder(const std::wstring& relative_path) {
 		WIN32_FIND_DATA find_data;
-		std::wstring fname = full_path + L"\\*.*";
+		std::wstring fname = relative_path + L"\\*.*";
 
 		HANDLE handle = FindFirstFile(fname.c_str(), &find_data);
 		if (INVALID_HANDLE_VALUE != handle) {
@@ -113,19 +111,19 @@ namespace monitor_client {
 				std::wstring file_name(find_data.cFileName);
 				if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 					if (L"." != file_name && L".." != file_name) {
-						std::wstring full_path_name = full_path + L"\\" + file_name;
-						std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(full_path_name);
+						std::wstring relative_path_name = relative_path + L"\\" + file_name;
+						std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(relative_path_name);
 
 						if (item_http_) {
 							item_http_->AddFolder(std::get<common_utility::FolderInfo>(result));
 						}
 
-						ManagementSubFolder(full_path_name);
+						ManagementSubFolder(relative_path_name);
 					}
 				}
 				else {
-					std::wstring full_path_name = full_path + L"\\" + file_name;
-					std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(full_path_name);
+					std::wstring relative_path_name = relative_path + L"\\" + file_name;
+					std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(relative_path_name);
 					
 					if (item_http_) {
 						item_http_->AddFile(std::get<common_utility::FileInfo>(result));

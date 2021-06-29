@@ -12,7 +12,7 @@ namespace monitor_client {
 namespace common_utility {
 	struct ChangeItemInfo {
 		DWORD action;
-		std::wstring full_path;
+		std::wstring relative_path;
 	};
 
 	struct ChangeNameInfo {
@@ -32,10 +32,9 @@ namespace common_utility {
 		std::wstring creation_time;
 	};
 	
-	std::optional<std::wstring> GetItemName(const std::wstring& full_path);
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time);
-	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& full_path);
-	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& full_path);
+	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path);
+	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path);
 }  // namespace common_utility
 }  // namespace monitor_client
 #endif
