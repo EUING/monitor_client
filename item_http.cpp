@@ -1,8 +1,6 @@
 #include "item_http.h"
 
-#include <optional>
 #include <string>
-#include <vector>
 
 #include <cpprest/http_client.h>
 

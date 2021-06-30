@@ -190,3 +190,4 @@ x64/Debug/rest_client_test.ilk
 x64/Debug/monitor_client.vcxproj.FileListAbsolute.txt
 x64/Release/monitor_client.vcxproj.FileListAbsolute.txt
 *.CopyComplete
+*.idb

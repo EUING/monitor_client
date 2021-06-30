@@ -1,8 +1,6 @@
 #ifndef MONITOR_CLIENT_ITEM_HTTP_H_
 #define MONITOR_CLIENT_ITEM_HTTP_H_
 
-#include <optional>
-#include <vector>
 #include <string>
 
 #include <cpprest/http_client.h>
