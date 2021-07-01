@@ -55,7 +55,7 @@ namespace monitor_client {
 
 		common_utility::FileInfo info;
 		info.name = row[0][L"name"];
-		info.size = _wtoi(row[0][L"size"].c_str());
+		info.size = row[0][L"size"].empty() ? -1 : _wtoi(row[0][L"size"].c_str());
 
 		return info;
 	}
@@ -71,12 +71,9 @@ namespace monitor_client {
 			return std::nullopt;
 		}
 
-		auto row = result.value();
-		if (row.empty()) {
-			return std::vector<common_utility::FileInfo>();
-		}
-
 		std::vector<common_utility::FileInfo> v;
+		auto row = result.value();
+
 		for (const auto& data : row) {
 			std::wstring name = data.at(L"name");
 			std::wstring size = data.at(L"size");

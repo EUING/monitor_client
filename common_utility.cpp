@@ -86,7 +86,7 @@ namespace common_utility {
 		return info;
 	}
 
-	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>& split_parent_path, std::wstring& item_name) {
+	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name) {
 		if (relative_path.empty()) {
 			return false;
 		}
@@ -104,18 +104,20 @@ namespace common_utility {
 			return false;
 		}
 
-		split_parent_path.clear();
-
-		std::wstring parent_folder = dir;
-		std::wistringstream path_stream(parent_folder);
-		std::wstring name_path;
-
-		while (std::getline(path_stream, name_path, L'/')) {
-			split_parent_path.push_back(name_path);
-		}
-
 		item_name = fname;
 		item_name.append(ext);
+
+		if (split_parent_path) {
+			split_parent_path->clear();
+
+			std::wstring parent_folder = dir;
+			std::wistringstream path_stream(parent_folder);
+			std::wstring name_path;
+
+			while (std::getline(path_stream, name_path, L'/')) {
+				split_parent_path->push_back(name_path);
+			}
+		}
 
 		return true;
 	}

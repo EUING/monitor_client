@@ -37,7 +37,7 @@ namespace common_utility {
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time);
 	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path);
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path);
-	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>& split_parent_path, std::wstring& item_name);
+	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name);
 
 	template<typename ... Args>
 	std::wstring format_wstring(const std::wstring& format, Args ... args)

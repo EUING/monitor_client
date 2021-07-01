@@ -27,7 +27,7 @@ namespace monitor_client {
 		void SetPort(int port) { builder_.set_port(port); }
 
 		bool RenameItem(const common_utility::ChangeNameInfo& name_info);
-		bool RemoveItem(const std::wstring& itme_name);
+		bool RemoveItem(const std::wstring& relative_path);
 
 		bool AddFile(const common_utility::FileInfo& info);
 		bool ModifyFile(const common_utility::FileInfo& info);

@@ -31,10 +31,10 @@ namespace monitor_client {
 		return true;
 	}
 
-	bool ItemHttp::RemoveItem(const std::wstring& item_name) {
+	bool ItemHttp::RemoveItem(const std::wstring& relative_path) {
 		utility::string_t path_variable = kItemEndPoint;
 		path_variable.append(U("/info/"));
-		path_variable.append(item_name);
+		path_variable.append(relative_path);
 
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
