@@ -1,4 +1,4 @@
-#include "item_sql.h"
+#include "local_db.h"
 
 #include <queue>
 #include <vector>
@@ -9,20 +9,20 @@
 #include "common_utility.h"
 
 namespace monitor_client {
-	ItemSql::ItemSql(ItemDao* item_dao) : item_dao_(item_dao) {
+	LocalDb::LocalDb(std::unique_ptr<ItemDao>&& item_dao) : item_dao_(std::move(item_dao)) {
 
 	}
 
-	ItemSql::ItemSql(ItemSql&& rhs) : item_dao_(rhs.item_dao_) {
+	LocalDb::LocalDb(LocalDb&& rhs) : item_dao_(std::move(rhs.item_dao_)) {
 		rhs.item_dao_ = nullptr;
 	}
 
-	ItemSql& ItemSql::operator=(ItemSql&& rhs) {
+	LocalDb& LocalDb::operator=(LocalDb&& rhs) {
 		std::swap(item_dao_, rhs.item_dao_);
 		return *this;
 	}
 
-	std::optional<int> ItemSql::GetParentId(const std::wstring& relative_path) {
+	std::optional<int> LocalDb::GetParentId(const std::wstring& relative_path) {
 		if (!item_dao_) {
 			return std::nullopt;
 		}
@@ -55,7 +55,7 @@ namespace monitor_client {
 		return parent_id;
 	}
 
-	std::optional<common_utility::FileInfo> ItemSql::GetFileInfo(const std::wstring& relative_path) {
+	std::optional<common_utility::FileInfo> LocalDb::GetFileInfo(const std::wstring& relative_path) {
 		if (!item_dao_) {
 			return std::nullopt;
 		}
@@ -75,7 +75,7 @@ namespace monitor_client {
 		return item_dao_->GetFileInfo(item_name, parent_id);
 	}
 
-	bool ItemSql::RenameItem(const common_utility::ChangeNameInfo& name_info) {
+	bool LocalDb::RenameItem(const common_utility::ChangeNameInfo& name_info) {
 		if (!item_dao_) {
 			return false;
 		}
@@ -109,7 +109,7 @@ namespace monitor_client {
 		return result.value() == 1 ? true : false;
 	}
 
-	bool ItemSql::RemoveItem(const std::wstring& relative_path) {
+	bool LocalDb::RemoveItem(const std::wstring& relative_path) {
 		if (!item_dao_) {
 			return false;
 		}
@@ -172,7 +172,7 @@ namespace monitor_client {
 		return total_count == 0 ? false : true;
 	}
 
-	bool ItemSql::AddFile(const common_utility::FileInfo& info) {
+	bool LocalDb::AddFile(const common_utility::FileInfo& info) {
 		if (!item_dao_) {
 			return false;
 		}
@@ -200,7 +200,7 @@ namespace monitor_client {
 		return result.value() == 1 ? true : false;
 	}
 
-	bool ItemSql::ModifyFile(const common_utility::FileInfo& info) {
+	bool LocalDb::ModifyFile(const common_utility::FileInfo& info) {
 		if (!item_dao_) {
 			return false;
 		}
@@ -228,7 +228,7 @@ namespace monitor_client {
 		return result.value() == 1 ? true : false;
 	}
 
-	bool ItemSql::AddFolder(const common_utility::FolderInfo& info) {
+	bool LocalDb::AddFolder(const common_utility::FolderInfo& info) {
 		if (!item_dao_) {
 			return false;
 		}

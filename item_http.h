@@ -10,7 +10,7 @@
 namespace monitor_client {
 	class ItemHttp {
 	public:
-		ItemHttp(const std::wstring& host, int port);
+		explicit ItemHttp(const common_utility::NetworkInfo& info);
 
 		ItemHttp(const ItemHttp&) = default;
 		ItemHttp& operator=(const ItemHttp&) = default;
@@ -20,10 +20,10 @@ namespace monitor_client {
 
 		~ItemHttp() = default;
 
-		std::wstring GetHost() { return builder_.host(); }
+		std::wstring GetHost() const { return builder_.host(); }
 		void SetHost(const std::wstring& host) { builder_.set_host(host); }
 
-		int GetPort() { return builder_.port(); }
+		int GetPort() const { return builder_.port(); }
 		void SetPort(int port) { builder_.set_port(port); }
 
 		bool RenameItem(const common_utility::ChangeNameInfo& name_info);

@@ -12,7 +12,12 @@
 #include "item_http.h"
 
 namespace monitor_client {
-	ItemManager::ItemManager(NotifyQueue* notify_queue, ItemHttp* item_http) : thread_future_{}, notify_queue_(notify_queue), item_http_(item_http) {
+	ItemManager::ItemManager(std::shared_ptr<NotifyQueue> notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao) :
+		thread_future_{}, 
+		notify_queue_(notify_queue), 
+		item_http_(network_info),
+		local_db_(std::move(item_dao)) {
+
 	}
 
 	ItemManager::~ItemManager() {
@@ -62,18 +67,12 @@ namespace monitor_client {
 			if (1 == result.index()) {
 				common_utility::FileInfo file_info = std::get<common_utility::FileInfo>(result);
 				std::replace(file_info.name.begin(), file_info.name.end(), L'\\', L'/');  // Window path to Posix path
-
-				if (item_http_) {
-					item_http_->AddFile(file_info);
-				}
+				item_http_.AddFile(file_info);
 			}
 			else if (2 == result.index()) {
 				common_utility::FolderInfo folder_info = std::get<common_utility::FolderInfo>(result);
 				std::replace(folder_info.name.begin(), folder_info.name.end(), L'\\', L'/');  // Window path to Posix path
-
-				if (item_http_) {
-					item_http_->AddFolder(folder_info);
-				}
+				item_http_.AddFolder(folder_info);
 				ManagementSubFolder(info.relative_path);
 			}
 
@@ -84,21 +83,14 @@ namespace monitor_client {
 			if (1 == result.index()) {
 				common_utility::FileInfo file_info = std::get<common_utility::FileInfo>(result);
 				std::replace(file_info.name.begin(), file_info.name.end(), L'\\', L'/');  // Window path to Posix path
-
-				if (item_http_) {
-					item_http_->ModifyFile(file_info);
-				}
-				// 폴더 MODIFIED는 SKIP
-			}
+				item_http_.ModifyFile(file_info);
+			}  // 폴더 MODIFIED는 SKIP
 			break;
 		}
 		case FILE_ACTION_REMOVED: {
 			std::wstring item_path = info.relative_path;
 			std::replace(item_path.begin(), item_path.end(), L'\\', L'/');  // Window path to Posix path
-			if (item_http_) {
-				item_http_->RemoveItem(item_path);
-			}			
-			
+			item_http_.RemoveItem(item_path);			
 			break;
 		}
 		case FILE_ACTION_RENAMED_NEW_NAME: {
@@ -107,10 +99,7 @@ namespace monitor_client {
 				common_utility::ChangeNameInfo change_name_info;
 				std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
 				std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
-
-				if (item_http_) {
-					item_http_->RenameItem(change_name_info);
-				}
+				item_http_.RenameItem(change_name_info);
 			}
 			break;
 		}
@@ -133,10 +122,7 @@ namespace monitor_client {
 						if (result.index() == 2) {
 							common_utility::FolderInfo info = std::get<common_utility::FolderInfo>(result);
 							std::replace(info.name.begin(), info.name.end(), L'\\', L'/');  // Window path to Posix path
-
-							if (item_http_) {
-								item_http_->AddFolder(info);
-							}
+							item_http_.AddFolder(info);
 						}						
 
 						ManagementSubFolder(relative_path_name);
@@ -149,10 +135,7 @@ namespace monitor_client {
 					if (result.index() == 1) {
 						common_utility::FileInfo info = std::get<common_utility::FileInfo>(result);
 						std::replace(info.name.begin(), info.name.end(), L'\\', L'/');  // Window path to Posix path
-
-						if (item_http_) {
-							item_http_->AddFile(info);
-						}
+						item_http_.AddFile(info);
 					}					
 				}
 			} while (FindNextFile(handle, &find_data));

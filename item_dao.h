@@ -2,9 +2,6 @@
 #define MONITOR_CLIENT_ITEM_DAO_H_
 
 #include <optional>
-#include <memory>
-
-#include "sqlite_wrapper.h"
 
 #include "common_utility.h"
 
@@ -19,21 +16,30 @@ namespace monitor_client {
 		ItemDao(ItemDao&&) = default;
 		ItemDao& operator=(ItemDao&&) = default;
 
-		~ItemDao() = default;
+		virtual ~ItemDao() = default;
 
-		bool OpenDatabase(const std::wstring& database_path);
-		std::optional<int> GetItemId(const std::wstring& item_name, int parent_id);
-		std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& file_name, int parent_id);
-		std::optional<std::vector<common_utility::FileInfo>> GetFolderContainList(int parent_id);
+		virtual bool OpenDatabase(const std::wstring& database_path) = 0;
+		virtual std::optional<int> GetItemId(const std::wstring& item_name, int parent_id) const = 0;
+		virtual std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& file_name, int parent_id) const = 0;
+		virtual std::optional<std::vector<common_utility::FileInfo>> GetFolderContainList(int parent_id) const = 0;
 
-		std::optional<int> ChangeItemName(const common_utility::ChangeNameInfo& name_info, int parent_id);
-		std::optional<int> DeleteItemInfo(const std::wstring& item_name, int parent_id);
-		std::optional<int> InsertFileInfo(const common_utility::FileInfo& file_info, int parent_id);
-		std::optional<int> ModifyFileInfo(const common_utility::FileInfo& file_info, int parent_id);
-		std::optional<int> InsertFolderInfo(const common_utility::FolderInfo& folder_info, int parent_id);
+		virtual std::optional<int> ChangeItemName(const common_utility::ChangeNameInfo& name_info, int parent_id) = 0;
+		virtual std::optional<int> DeleteItemInfo(const std::wstring& item_name, int parent_id) = 0;
+		virtual std::optional<int> InsertFileInfo(const common_utility::FileInfo& file_info, int parent_id) = 0;
+		virtual std::optional<int> ModifyFileInfo(const common_utility::FileInfo& file_info, int parent_id) = 0;
+		virtual std::optional<int> InsertFolderInfo(const common_utility::FolderInfo& folder_info, int parent_id) = 0;
+	};
 
-	private:
-		std::unique_ptr<sqlite_manager::utf16::SqliteWrapper> sqlite_wrapper_;
+	class ItemDaoDummy : public monitor_client::ItemDao {
+		bool OpenDatabase(const std::wstring& database_path) override { return true; }
+		std::optional<int> GetItemId(const std::wstring& item_name, int parent_id) const override { return 0; }
+		std::optional<monitor_client::common_utility::FileInfo> GetFileInfo(const std::wstring& file_name, int parent_id) const override { return monitor_client::common_utility::FileInfo(); }
+		std::optional<std::vector<monitor_client::common_utility::FileInfo>> GetFolderContainList(int parent_id) const override { return std::vector<monitor_client::common_utility::FileInfo>(); }
+		std::optional<int> ChangeItemName(const monitor_client::common_utility::ChangeNameInfo& name_info, int parent_id) override { return 0; }
+		std::optional<int> DeleteItemInfo(const std::wstring& item_name, int parent_id) override { return 0; }
+		std::optional<int> InsertFileInfo(const monitor_client::common_utility::FileInfo& file_info, int parent_id) override { return 0; }
+		std::optional<int> ModifyFileInfo(const monitor_client::common_utility::FileInfo& file_info, int parent_id) override { return 0; }
+		std::optional<int> InsertFolderInfo(const monitor_client::common_utility::FolderInfo& folder_info, int parent_id) override { return 0; }
 	};
 }  // namespace monitor_client
 #endif

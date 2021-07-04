@@ -13,7 +13,7 @@
 #include "notify_queue.h"
 
 namespace monitor_client {
-	FolderWatcher::FolderWatcher(NotifyQueue* notify_queue, const std::wstring& watch_folder /*= L""*/)
+	FolderWatcher::FolderWatcher(std::shared_ptr<NotifyQueue> notify_queue, const std::wstring& watch_folder /*= L""*/)
 		: thread_future_{}, stop_watching_event_(NULL), notify_queue_(notify_queue), watch_folder_(watch_folder) {
 	}
 

@@ -20,7 +20,6 @@ namespace monitor_client {
 	void NotifyQueue::Push(const common_utility::ChangeItemInfo& change_info) {
 		std::unique_lock lock(notify_queue_m_);
 		change_info_.push(change_info);
-		lock.unlock();
 
 		notify_queue_cv_.notify_one();
 	}

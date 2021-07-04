@@ -9,8 +9,8 @@ namespace monitor_client {
 	const wchar_t* const kFileEndPoint = U("/file");
 	const wchar_t* const kFolderEndPoint = U("/folder");
 
-	ItemHttp::ItemHttp(const std::wstring& host, int port) : builder_() {
-		builder_.set_scheme(U("http")).set_host(host).set_port(port);
+	ItemHttp::ItemHttp(const common_utility::NetworkInfo& info) : builder_() {
+		builder_.set_scheme(U("http")).set_host(info.host).set_port(info.port);
 	}
 
 	bool ItemHttp::RenameItem(const common_utility::ChangeNameInfo& name_info) {

@@ -2,16 +2,19 @@
 #define MONITOR_CLIENT_ITEM_MANAGER_H_
 
 #include <optional>
+#include <memory>
 #include <future>
 #include <string>
 
+#include "common_utility.h"
 #include "item_http.h"
+#include "local_db.h"
 #include "notify_queue.h"
 
 namespace monitor_client {
 	class ItemManager {
 	public:
-		ItemManager(NotifyQueue* notify_queue, ItemHttp* item_http);
+		ItemManager(std::shared_ptr<NotifyQueue> notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao);
 
 		ItemManager(const ItemManager&) = delete;
 		ItemManager& operator=(const ItemManager&) = delete;
@@ -29,8 +32,9 @@ namespace monitor_client {
 
 	private:
 		std::future<void> thread_future_;
-		NotifyQueue* notify_queue_;
-		ItemHttp* item_http_;
+		std::shared_ptr<NotifyQueue> notify_queue_;
+		ItemHttp item_http_;
+		LocalDb local_db_;
 	};
 }  // namespace monitor_client
 #endif

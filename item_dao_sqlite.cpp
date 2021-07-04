@@ -1,4 +1,4 @@
-#include "item_dao.h"
+#include "item_dao_sqlite.h"
 
 #include <optional>
 #include <memory>
@@ -9,7 +9,7 @@
 #include "common_utility.h"
 
 namespace monitor_client {
-	bool ItemDao::OpenDatabase(const std::wstring& database_path) {
+	bool ItemDaoSqlite::OpenDatabase(const std::wstring& database_path) {
 		sqlite_wrapper_ = sqlite_manager::utf16::SqliteWrapper::Create(database_path);
 		if (!sqlite_wrapper_) {
 			return false;
@@ -18,7 +18,7 @@ namespace monitor_client {
 		return true;
 	}
 
-	std::optional<int> ItemDao::GetItemId(const std::wstring& item_name, int parent_id) {
+	std::optional<int> ItemDaoSqlite::GetItemId(const std::wstring& item_name, int parent_id) const {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -37,7 +37,7 @@ namespace monitor_client {
 		return _wtoi(row[0][L"id"].c_str());
 	}
 
-	std::optional<common_utility::FileInfo> ItemDao::GetFileInfo(const std::wstring& file_name, int parent_id) {
+	std::optional<common_utility::FileInfo> ItemDaoSqlite::GetFileInfo(const std::wstring& file_name, int parent_id) const {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -60,7 +60,7 @@ namespace monitor_client {
 		return info;
 	}
 
-	std::optional<std::vector<common_utility::FileInfo>> ItemDao::GetFolderContainList(int parent_id) {
+	std::optional<std::vector<common_utility::FileInfo>> ItemDaoSqlite::GetFolderContainList(int parent_id) const {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -88,7 +88,7 @@ namespace monitor_client {
 		return v;
 	}
 
-	std::optional<int> ItemDao::ChangeItemName(const common_utility::ChangeNameInfo& name_info, int parent_id) {
+	std::optional<int> ItemDaoSqlite::ChangeItemName(const common_utility::ChangeNameInfo& name_info, int parent_id) {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -102,7 +102,7 @@ namespace monitor_client {
 		return result;
 	}
 
-	std::optional<int> ItemDao::DeleteItemInfo(const std::wstring& item_name, int parent_id) {
+	std::optional<int> ItemDaoSqlite::DeleteItemInfo(const std::wstring& item_name, int parent_id) {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -116,7 +116,7 @@ namespace monitor_client {
 		return result;
 	}
 
-	std::optional<int> ItemDao::InsertFileInfo(const common_utility::FileInfo& file_info, int parent_id) {
+	std::optional<int> ItemDaoSqlite::InsertFileInfo(const common_utility::FileInfo& file_info, int parent_id) {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -130,7 +130,7 @@ namespace monitor_client {
 		return result;
 	}
 
-	std::optional<int> ItemDao::ModifyFileInfo(const common_utility::FileInfo& file_info, int parent_id) {
+	std::optional<int> ItemDaoSqlite::ModifyFileInfo(const common_utility::FileInfo& file_info, int parent_id) {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}
@@ -144,7 +144,7 @@ namespace monitor_client {
 		return result;
 	}
 
-	std::optional<int> ItemDao::InsertFolderInfo(const common_utility::FolderInfo& folder_info, int parent_id) {
+	std::optional<int> ItemDaoSqlite::InsertFolderInfo(const common_utility::FolderInfo& folder_info, int parent_id) {
 		if (!sqlite_wrapper_) {
 			return std::nullopt;
 		}

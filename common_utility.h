@@ -33,6 +33,11 @@ namespace common_utility {
 		std::wstring name;
 		std::wstring creation_time;
 	};
+
+	struct NetworkInfo {
+		std::wstring host;
+		int port;
+	};
 	
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time);
 	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path);

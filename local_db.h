@@ -1,24 +1,25 @@
-#ifndef MONITOR_CLIENT_ITEM_SQL_H_
-#define MONITOR_CLIENT_ITEM_SQL_H_
+#ifndef MONITOR_CLIENT_LOCAL_DB_H_
+#define MONITOR_CLIENT_LOCAL_DB_H_
 
 #include <optional>
 #include <string>
+#include <memory>
 
 #include "item_dao.h"
 #include "common_utility.h"
 
 namespace monitor_client {
-	class ItemSql {
+	class LocalDb {
 	public:
-		ItemSql(ItemDao* item_dao);
+		LocalDb(std::unique_ptr<ItemDao>&& item_dao);
 
-		ItemSql(const ItemSql&) = delete;
-		ItemSql& operator=(const ItemSql&) = delete;
+		LocalDb(const LocalDb&) = delete;
+		LocalDb& operator=(const LocalDb&) = delete;
 
-		ItemSql(ItemSql&&);
-		ItemSql& operator=(ItemSql&&);
+		LocalDb(LocalDb&&);
+		LocalDb& operator=(LocalDb&&);
 
-		~ItemSql() = default;
+		~LocalDb() = default;
 
 		std::optional<int> GetParentId(const std::wstring& relative_path);
 		std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& relative_path);
@@ -32,7 +33,7 @@ namespace monitor_client {
 		bool AddFolder(const common_utility::FolderInfo& info);
 
 	private:
-		ItemDao* item_dao_;
+		std::unique_ptr<ItemDao> item_dao_;
 	};
 }  // namespace monitor_client
 #endif

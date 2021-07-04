@@ -6,13 +6,14 @@
 #include <future>
 #include <optional>
 #include <string>
+#include <memory>
 
 #include "notify_queue.h"
 
 namespace monitor_client {
 	class FolderWatcher {
 	public:
-		FolderWatcher(NotifyQueue* notify_queue, const std::wstring& watch_folder = L"");
+		FolderWatcher(std::shared_ptr<NotifyQueue> notify_queue, const std::wstring& watch_folder = L"");
 
 		FolderWatcher(const FolderWatcher&) = delete;
 		FolderWatcher& operator=(const FolderWatcher&) = delete;
@@ -36,7 +37,7 @@ namespace monitor_client {
 		std::future<void> thread_future_;
 		HANDLE stop_watching_event_;  // 감시 종료 이벤트
 		std::wstring watch_folder_;  // 감시하는 경로
-		NotifyQueue* notify_queue_;
+		std::shared_ptr<NotifyQueue> notify_queue_;
 	};
 
 }  // namespace monitor_client
