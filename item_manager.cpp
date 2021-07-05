@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 
+#include <iostream>
+#include <chrono>
 #include <variant>
 #include <future>
 #include <optional>
@@ -31,12 +33,18 @@ namespace monitor_client {
 		thread_future_ = std::async(std::launch::async, [this]() {
 			if (notify_queue_) {
 				while (true) {				
-					std::optional<common_utility::ChangeItemInfo> pop = notify_queue_->Pop();
-					if (!pop.has_value())
+					std::optional<common_utility::ChangeItemInfo> front = notify_queue_->Front();
+					if (!front.has_value())
 						return;
 
-					auto change_info = pop.value();
-					ManagementItem(change_info);
+					auto change_info = front.value();
+					if (ManagementItem(change_info)) {
+						notify_queue_->Pop();
+					}
+					else {
+						std::wcerr << L"ItemManager::Run: ManagementItem Fail: " << change_info.relative_path << std::endl;
+						std::this_thread::sleep_for(std::chrono::seconds(3));
+					}
 				}
 			}
 		});
@@ -60,20 +68,34 @@ namespace monitor_client {
 		return thread_future_.valid() && std::future_status::timeout == thread_future_.wait_for(std::chrono::milliseconds(0));
 	}
 
-	void ItemManager::ManagementItem(const common_utility::ChangeItemInfo& info) {
+	bool ItemManager::ManagementItem(const common_utility::ChangeItemInfo& info) {
 		switch (info.action) {
 		case FILE_ACTION_ADDED: {
 			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.relative_path);
 			if (1 == result.index()) {
 				common_utility::FileInfo file_info = std::get<common_utility::FileInfo>(result);
 				std::replace(file_info.name.begin(), file_info.name.end(), L'\\', L'/');  // Window path to Posix path
-				item_http_.AddFile(file_info);
+				if (!item_http_.AddFile(file_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: item_http_.AddFile Fail: " << file_info.name << std::endl;
+					return false;
+				}
+				
+				if (!local_db_.AddFile(file_info)) {
+					return false;
+				}
 			}
 			else if (2 == result.index()) {
 				common_utility::FolderInfo folder_info = std::get<common_utility::FolderInfo>(result);
 				std::replace(folder_info.name.begin(), folder_info.name.end(), L'\\', L'/');  // Window path to Posix path
-				item_http_.AddFolder(folder_info);
-				ManagementSubFolder(info.relative_path);
+				if (!item_http_.AddFolder(folder_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: item_http_.AddFolder Fail: " << folder_info.name << std::endl;
+					return false;
+				}
+
+				if (!local_db_.AddFolder(folder_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: local_db_.AddFolder Fail: " << folder_info.name << std::endl;
+					return false;
+				}
 			}
 
 			break;
@@ -83,14 +105,30 @@ namespace monitor_client {
 			if (1 == result.index()) {
 				common_utility::FileInfo file_info = std::get<common_utility::FileInfo>(result);
 				std::replace(file_info.name.begin(), file_info.name.end(), L'\\', L'/');  // Window path to Posix path
-				item_http_.ModifyFile(file_info);
+				if (!item_http_.ModifyFile(file_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: item_http_.ModifyFile Fail: " << file_info.name << std::endl;
+					return false;
+				}
+
+				if (!local_db_.ModifyFile(file_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: local_db_.ModifyFile Fail: " << file_info.name << std::endl;
+					return false;
+				}
 			}  // Æú´õ MODIFIED´Â SKIP
 			break;
 		}
 		case FILE_ACTION_REMOVED: {
 			std::wstring item_path = info.relative_path;
 			std::replace(item_path.begin(), item_path.end(), L'\\', L'/');  // Window path to Posix path
-			item_http_.RemoveItem(item_path);			
+			if (!item_http_.RemoveItem(item_path)) {
+				std::wcerr << L"ItemManager::ManagementItem: item_http_.RemoveItem Fail: " << item_path << std::endl;
+				return false;
+			}
+
+			if (!local_db_.RemoveItem(item_path)) {
+				std::wcerr << L"ItemManager::ManagementItem: local_db_.RemoveItem Fail: " << item_path << std::endl;
+				return false;
+			}
 			break;
 		}
 		case FILE_ACTION_RENAMED_NEW_NAME: {
@@ -99,48 +137,20 @@ namespace monitor_client {
 				common_utility::ChangeNameInfo change_name_info;
 				std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
 				std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
-				item_http_.RenameItem(change_name_info);
+				if (!item_http_.RenameItem(change_name_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: item_http_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
+					return false;
+				}
+
+				if (!local_db_.RenameItem(change_name_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: local_db_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
+					return false;
+				}
 			}
 			break;
 		}
 		}
-	}
 
-	void ItemManager::ManagementSubFolder(const std::wstring& relative_path) {
-		WIN32_FIND_DATA find_data;
-		std::wstring fname = relative_path + L"\\*.*";
-
-		HANDLE handle = FindFirstFile(fname.c_str(), &find_data);
-		if (INVALID_HANDLE_VALUE != handle) {
-			do {
-				std::wstring file_name(find_data.cFileName);
-				if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-					if (L"." != file_name && L".." != file_name) {
-						std::wstring relative_path_name = relative_path + L"\\" + file_name;
-						std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(relative_path_name);
-
-						if (result.index() == 2) {
-							common_utility::FolderInfo info = std::get<common_utility::FolderInfo>(result);
-							std::replace(info.name.begin(), info.name.end(), L'\\', L'/');  // Window path to Posix path
-							item_http_.AddFolder(info);
-						}						
-
-						ManagementSubFolder(relative_path_name);
-					}
-				}
-				else {
-					std::wstring relative_path_name = relative_path + L"\\" + file_name;
-					std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(relative_path_name);
-					
-					if (result.index() == 1) {
-						common_utility::FileInfo info = std::get<common_utility::FileInfo>(result);
-						std::replace(info.name.begin(), info.name.end(), L'\\', L'/');  // Window path to Posix path
-						item_http_.AddFile(info);
-					}					
-				}
-			} while (FindNextFile(handle, &find_data));
-		}
-
-		FindClose(handle);
+		return true;
 	}
 }  // namespace monitor_client

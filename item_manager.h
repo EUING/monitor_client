@@ -27,8 +27,7 @@ namespace monitor_client {
 		bool Run();
 		void Stop();
 		bool IsRunning();
-		void ManagementItem(const common_utility::ChangeItemInfo& info);
-		void ManagementSubFolder(const std::wstring& relative_path);
+		bool ManagementItem(const common_utility::ChangeItemInfo& info);
 
 	private:
 		std::future<void> thread_future_;

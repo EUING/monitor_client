@@ -24,9 +24,14 @@ namespace monitor_client {
 		notify_queue_cv_.notify_one();
 	}
 
-	std::optional<common_utility::ChangeItemInfo> NotifyQueue::Pop() {
+	void NotifyQueue::Pop() {
 		std::unique_lock lock(notify_queue_m_);
-		
+		change_info_.pop();
+	}
+
+	std::optional<common_utility::ChangeItemInfo> NotifyQueue::Front() {
+		std::unique_lock lock(notify_queue_m_);
+
 		notify_queue_cv_.wait(lock, [this]() { return (!change_info_.empty() || break_); });
 		if (break_) {
 			break_ = false;
@@ -34,7 +39,6 @@ namespace monitor_client {
 		}
 
 		auto front = change_info_.front();
-		change_info_.pop();
 
 		return front;
 	}

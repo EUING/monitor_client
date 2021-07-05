@@ -1,5 +1,6 @@
 #include "item_http.h"
 
+#include <iostream>
 #include <string>
 
 #include <cpprest/http_client.h>
@@ -24,11 +25,12 @@ namespace monitor_client {
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PATCH, U("/"), patch_data).get();
-		if (response.status_code() != web::http::status_codes::OK) {
-			return false;
+		if (response.status_code() == web::http::status_codes::OK) {
+			return true;
 		}
 
-		return true;
+		std::wcerr << L"ItemHttp::RenameItem: request Fail" << std::endl;
+		return false;
 	}
 
 	bool ItemHttp::RemoveItem(const std::wstring& relative_path) {
@@ -39,11 +41,12 @@ namespace monitor_client {
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::DEL).get();
-		if (response.status_code() != web::http::status_codes::NoContent) {
-			return false;
+		if (response.status_code() == web::http::status_codes::NoContent) {
+			return true;
 		}
 
-		return true;
+		std::wcerr << L"ItemHttp::RemoveItem: request Fail" << std::endl;
+		return false;
 	}
 
 	bool ItemHttp::AddFile(const common_utility::FileInfo & info) {
@@ -58,12 +61,15 @@ namespace monitor_client {
 
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
-	    web::http::http_response response = client.request(web::http::methods::POST, U("/"), post_data).get();
-		if (response.status_code() != web::http::status_codes::Created) {
-			return false;
+	    web::http::http_response response = client.request(web::http::methods::PUT, U("/"), post_data).get();
+		switch (response.status_code()) {
+		case web::http::status_codes::OK:
+		case web::http::status_codes::Created:
+			return true;
 		}
 
-		return true;
+		std::wcerr << L"ItemHttp::AddFile: request Fail" << std::endl;
+		return false;
 	}
 
 	bool ItemHttp::ModifyFile(const common_utility::FileInfo& info) {		
@@ -79,10 +85,11 @@ namespace monitor_client {
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PATCH, U("/"), patch_data).get();
 		if (response.status_code() != web::http::status_codes::OK) {
-			return false;
+			return true;
 		}
 
-		return true;
+		std::wcerr << L"ItemHttp::ModifyFile: request Fail" << std::endl;
+		return false;
 	}
 
 	bool ItemHttp::AddFolder(const common_utility::FolderInfo& info) {
@@ -95,11 +102,14 @@ namespace monitor_client {
 		
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
-		web::http::http_response response = client.request(web::http::methods::POST, U("/"), post_data).get();
-		if (response.status_code() != web::http::status_codes::Created) {
-			return false;
+		web::http::http_response response = client.request(web::http::methods::PUT, U("/"), post_data).get();
+		switch (response.status_code()) {
+		case web::http::status_codes::OK:
+		case web::http::status_codes::Created:
+			return true;
 		}
 
-		return true;
+		std::wcerr << L"ItemHttp::AddFolder: request Fail" << std::endl;
+		return false;
 	}
 }  // namespace monitor_client

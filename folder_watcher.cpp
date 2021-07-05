@@ -42,6 +42,7 @@ namespace monitor_client {
 
 	bool FolderWatcher::StartWatching() {
 		if (IsRunning()) {
+			std::wcerr << L"FolderWatcher::StartWatching: FolderWatcher is running" << std::endl;
 			return false;
 		}
 
@@ -49,12 +50,14 @@ namespace monitor_client {
 		std::shared_ptr<void> overlap_event_ptr;
 
 		if (!InitWatching(folder_handle_ptr, overlap_event_ptr)) {
+			std::wcerr << L"FolderWatcher::StartWatching: InitWatching Fail" << std::endl;
 			return false;
 		}
 
 		thread_future_ = std::async(std::launch::async, &FolderWatcher::WatchingDirectory, this, folder_handle_ptr, overlap_event_ptr);
 		if (std::future_status::timeout != thread_future_.wait_for(std::chrono::milliseconds(100))) {
 			// thread ready, deferred 여부 확인 및 thread가 준비 완료될 때까지 대기
+			std::wcerr << L"FolderWatcher::StartWatching: thread wait_for Fail" << std::endl;
 			return false;
 		}
 
@@ -62,15 +65,10 @@ namespace monitor_client {
 	}	
 
 	bool FolderWatcher::InitWatching(std::shared_ptr<void>& folder_handle_ptr, std::shared_ptr<void>& overlap_event_ptr) {
-		DWORD attribute = GetFileAttributes(watch_folder_.c_str());
-		if (INVALID_FILE_ATTRIBUTES == attribute) {
-			std::wcerr << L"GetFileAttributes Fail!\n";
-			return false;
-		}
-
-		if (0 == (attribute & FILE_ATTRIBUTE_DIRECTORY)) {
-			std::wcerr << L"No Folder!\n";
-			return false;  // 폴더가 아니면 감시하지 않음
+		std::optional<bool> is_dir = common_utility::IsDirectory(watch_folder_);
+		if (!(is_dir.has_value() && is_dir.value())) {
+			std::wcerr << L"FolderWatcher::InitWatching: watch_folder_ is not directory" << std::endl;
+			return false;   // 폴더가 아니면 감시하지 않음
 		}
 
 		HANDLE folder_handle = CreateFile(
@@ -83,12 +81,12 @@ namespace monitor_client {
 			NULL);
 		
 		if (INVALID_HANDLE_VALUE == folder_handle) {
-			std::wcerr << L"CreateFile Fail!\n";
+			std::wcerr << L"FolderWatcher::InitWatching: CreateFile Fail: " << watch_folder_ << std::endl;
 			return false;
 		}
 
 		if (!SetCurrentDirectory(watch_folder_.c_str())) {
-			std::wcerr << L"SetCurrentDirectory Fail!\n";
+			std::wcerr << L"FolderWatcher::InitWatching: SetCurrentDirectory Fail: " << watch_folder_ << std::endl;
 			return false;
 		}
 
@@ -106,7 +104,7 @@ namespace monitor_client {
 
 		HANDLE overlap_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (NULL == overlap_event) {
-			std::wcerr << L"CreateEvent Fail!\n";
+			std::wcerr << L"FolderWatcher::InitWatching: CreateEvent Fail: " << "overlap_event" << std::endl;
 			return false;
 		}
 
@@ -114,14 +112,14 @@ namespace monitor_client {
 
 		stop_watching_event_ = CreateEvent(NULL, TRUE, FALSE, NULL);
 		if (NULL == stop_watching_event_) {
-			std::wcerr << L"CreateEvent Fail!\n";
+			std::wcerr << L"FolderWatcher::InitWatching: CreateEvent Fail: " << "stop_watching_event_" << std::endl;
 			return false;
 		}
 
 		HANDLE handles[2] = { overlap_event_ptr.get(), stop_watching_event_ };
 		DWORD signal = WaitForMultipleObjects(2, handles, FALSE, 0);
 		if (WAIT_TIMEOUT != signal) {  // handle valid check
-			std::wcerr << L"WaitForMultipleObjects Fail!\n";
+			std::wcerr << L"FolderWatcher::InitWatching: WaitForMultipleObjects Fail: " << signal << std::endl;
 			CloseEvent();
 			return false;
 		}
@@ -159,25 +157,31 @@ namespace monitor_client {
 				NULL);
 
 			if (!result) {
-				std::wcerr << L"ReadDirectoryChange Fail!\n";
+				std::wcerr << L"FolderWatcher::WatchingDirectory: ReadDirectoryChange Fail" << std::endl;
 				break;
 			}
 
 			DWORD signal = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 			if (WAIT_OBJECT_0 == signal) {
 				if (!GetOverlappedResult(folder_handle, &overlap, &bytes_returned, FALSE)) {
-					std::wcerr << L"GetOverlappedResult Fail!\n";
+					std::wcerr << L"FolderWatcher::WatchingDirectory: GetOverlappedResult Fail" << std::endl;
 					break;
 				}
 
-				DWORD offset = 0;
 				FILE_NOTIFY_INFORMATION* fni = nullptr;
+				bool is_first = true;
 
-				do {
+				for (DWORD offset = 0; is_first || fni->NextEntryOffset != 0; offset += fni->NextEntryOffset) {
+					is_first = false;
 					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer.get()[offset]);
 
 					std::wstring result_name;
-					if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
+					if (FILE_ACTION_ADDED == fni->Action) {
+						std::wstring name(fni->FileName, fni->FileNameLength / 2);
+						PushItem(name);
+						continue;
+					}
+					else if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
 						std::wstring old_name(fni->FileName, fni->FileNameLength / 2);
 
 						offset += fni->NextEntryOffset;
@@ -195,19 +199,51 @@ namespace monitor_client {
 					if (notify_queue_) {
 						notify_queue_->Push({ fni->Action, result_name });
 					}
-
-					offset += fni->NextEntryOffset;
-				} while (fni->NextEntryOffset != 0);
+				}
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
 				break;
 			}
 			else {
-				std::wcerr << L"WaitForMultipleObjects Fail!\n";
+				std::wcerr << L"FolderWatcher::WatchingDirectory: WaitForMultipleObjects Fail" << std::endl;
 				break;
 			}
 		}
 		
 		CloseEvent();
+	}
+
+	void FolderWatcher::PushItem(const std::wstring& relative_path) {
+		std::wclog << FILE_ACTION_ADDED << L" " << relative_path << std::endl;
+		notify_queue_->Push({ FILE_ACTION_ADDED, relative_path });
+
+		std::optional<bool> is_dir = common_utility::IsDirectory(relative_path);
+		if (!is_dir.has_value()) {
+			std::wcerr << L"FolderWatcher::PushItem: IsDirectory Fail: "  << relative_path << std::endl;
+			return;
+		}		
+
+		if (!is_dir.value()) {
+			return;
+		}
+
+		WIN32_FIND_DATA find_data;
+		std::wstring fname = relative_path + L"\\*.*";
+
+		HANDLE handle = FindFirstFile(fname.c_str(), &find_data);
+		if (INVALID_HANDLE_VALUE != handle) {
+			do {
+				std::wstring file_name(find_data.cFileName);
+				if (L"." == file_name || L".." == file_name) {
+					continue;
+				}
+
+				std::wstring relative_path_name = relative_path + L"\\" + file_name;
+				PushItem(relative_path_name);
+
+			} while (FindNextFile(handle, &find_data));
+		}
+
+		FindClose(handle);
 	}
 }  // namespace monitor_client

@@ -24,7 +24,8 @@ namespace monitor_client {
 		~NotifyQueue();
 
 		void Push(const common_utility::ChangeItemInfo& change_info);
-		std::optional<common_utility::ChangeItemInfo> Pop();
+		void Pop();
+		std::optional<common_utility::ChangeItemInfo> Front();
 		void Break();
 
 	private:

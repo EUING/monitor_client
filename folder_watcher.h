@@ -32,6 +32,7 @@ namespace monitor_client {
 	private:
 		bool InitWatching(std::shared_ptr<void>& folder_handle_ptr, std::shared_ptr<void>& overlap_event_ptr);
 		void WatchingDirectory(std::shared_ptr<void> folder_handle_ptr, std::shared_ptr<void> overlap_event_ptr);
+		void PushItem(const std::wstring& relative_path);
 		void CloseEvent();
 
 		std::future<void> thread_future_;

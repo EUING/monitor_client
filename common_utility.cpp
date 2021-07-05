@@ -10,14 +10,26 @@
 
 namespace monitor_client {
 namespace common_utility {
+	std::optional<bool> IsDirectory(const std::wstring& path) {
+		DWORD attribute = GetFileAttributes(path.c_str());
+		if (INVALID_FILE_ATTRIBUTES == attribute) {
+			std::wcerr << L"common_utility::IsDirectory: GetFileAttributes Fail: " << path << std::endl;
+			return std::nullopt;
+		}
+
+		return (attribute & FILE_ATTRIBUTE_DIRECTORY);
+	}
+
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time) {
 		SYSTEMTIME utc;
 		if (!FileTimeToSystemTime(&time, &utc)) {
+			std::wcerr << L"common_utility::ConvertTimestamp: FileTimeToSystemTime Fail" << std::endl;
 			return std::nullopt;
 		}
 
 		SYSTEMTIME local_time;
 		if (!SystemTimeToTzSpecificLocalTime(NULL, &utc, &local_time)) {
+			std::wcerr << L"common_utility::ConvertTimestamp: SystemTimeToTzSpecificLocalTime Fail" << std::endl;
 			return std::nullopt;
 		}
 
@@ -32,11 +44,13 @@ namespace common_utility {
 	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path) {
 		WIN32_FILE_ATTRIBUTE_DATA file_attribute;
 		if (!GetFileAttributesEx(relative_path.c_str(), GetFileExInfoStandard, &file_attribute)) {
+			std::wcerr << L"common_utility::GetItemInfo: GetFileAttributesEx Fail: " << relative_path << std::endl;
 			return {};
 		}
 
 		std::optional<std::wstring> creation_result = ConvertTimestamp(file_attribute.ftCreationTime);
 		if (!creation_result.has_value()) {
+			std::wcerr << L"common_utility::GetItemInfo: ConvertTimestamp Fail" << std::endl;
 			return {};
 		}
 
@@ -49,6 +63,7 @@ namespace common_utility {
 		else {
 			std::optional<std::wstring> write_result = ConvertTimestamp(file_attribute.ftLastWriteTime);
 			if (!write_result.has_value()) {
+				std::wcerr << L"common_utility::GetItemInfo: ConvertTimestamp Fail" << std::endl;
 				return {};
 			}
 
@@ -76,6 +91,7 @@ namespace common_utility {
 		}
 
 		if (string_buffer.size() != 2) {
+			std::wcerr << L"common_utility::SplitChangeName Fail: " << relative_path << std::endl;
 			return std::nullopt;
 		}
 
@@ -88,6 +104,7 @@ namespace common_utility {
 
 	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name) {
 		if (relative_path.empty()) {
+			std::wcerr << L"common_utility::SplitPath: relative_path is empty" << std::endl;
 			return false;
 		}
 
@@ -101,6 +118,7 @@ namespace common_utility {
 
 		errno_t result = _wsplitpath_s(path.c_str(), drive, dir, fname, ext);
 		if (0 != result) {
+			std::wcerr << L"common_utility::SplitPath: _wsplitpath_s Fail: " << path << std::endl;
 			return false;
 		}
 

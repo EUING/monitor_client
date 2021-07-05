@@ -1,5 +1,6 @@
 #include "local_db.h"
 
+#include <iostream>
 #include <queue>
 #include <vector>
 #include <optional>
@@ -24,6 +25,7 @@ namespace monitor_client {
 
 	std::optional<int> LocalDb::GetParentId(const std::wstring& relative_path) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::GetParentId: item_dao_ is null" << std::endl;
 			return std::nullopt;
 		}
 
@@ -31,10 +33,12 @@ namespace monitor_client {
 		std::wstring item_name;
 
 		if (!common_utility::SplitPath(relative_path, &split_parent_path, item_name)) {
+			std::wcerr << L"LocalDb::GetParentId: SplitPath Fail: " << relative_path << std::endl;
 			return std::nullopt;
 		}
 
 		if (split_parent_path.empty() && item_name.empty()) {
+			std::wcerr << L"LocalDb::GetParentId: empty path" << std::endl;
 			return std::nullopt;
 		}
 
@@ -46,6 +50,7 @@ namespace monitor_client {
 		for (const auto& parent_path : split_parent_path) {
 			std::optional<int> result = item_dao_->GetItemId(parent_path, parent_id);
 			if (!result.has_value()) {
+				std::wcerr << L"LocalDb::GetParentId: GetItemId Fail: " << parent_path << L' ' << parent_id << std::endl;
 				return std::nullopt;
 			}
 
@@ -57,11 +62,13 @@ namespace monitor_client {
 
 	std::optional<common_utility::FileInfo> LocalDb::GetFileInfo(const std::wstring& relative_path) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::GetFileInfo: item_dao_ is null" << std::endl;
 			return std::nullopt;
 		}
 
 		std::optional<int> result = GetParentId(relative_path);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::GetFileInfo: GetParentId Fail: " << relative_path << std::endl;
 			return std::nullopt;
 		}
 
@@ -69,6 +76,7 @@ namespace monitor_client {
 
 		std::wstring item_name;
 		if (!common_utility::SplitPath(relative_path, nullptr, item_name)) {
+			std::wcerr << L"LocalDb::GetFileInfo: SplitPath Fail: " << relative_path << std::endl;
 			return std::nullopt;
 		}
 
@@ -77,11 +85,13 @@ namespace monitor_client {
 
 	bool LocalDb::RenameItem(const common_utility::ChangeNameInfo& name_info) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::RenameItem: item_dao_ is null" << std::endl;
 			return false;
 		}
 
 		std::optional<int> result = GetParentId(name_info.old_name);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::RenameItem: GetParentId Fail: " << name_info.old_name << std::endl;
 			return false;
 		}
 
@@ -89,11 +99,13 @@ namespace monitor_client {
 
 		std::wstring old_item_name;
 		if (!common_utility::SplitPath(name_info.old_name, nullptr, old_item_name)) {
+			std::wcerr << L"LocalDb::RenameItem: SplitPath Fail: " << name_info.old_name << std::endl;
 			return false;
 		}
 
 		std::wstring new_item_name;
 		if (!common_utility::SplitPath(name_info.new_name, nullptr, new_item_name)) {
+			std::wcerr << L"LocalDb::RenameItem: SplitPath Fail: " << name_info.new_name << std::endl;
 			return false;
 		}
 
@@ -103,6 +115,7 @@ namespace monitor_client {
 
 		result = item_dao_->ChangeItemName(info, parent_id);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::RenameItem: ChangeItemName Fail: " << info.old_name << L'?' << info.new_name << parent_id  << std::endl;
 			return false;
 		}
 
@@ -111,11 +124,13 @@ namespace monitor_client {
 
 	bool LocalDb::RemoveItem(const std::wstring& relative_path) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::RemoveItem: item_dao_ is null" << std::endl;
 			return false;
 		}
 
 		std::optional<int> result = GetParentId(relative_path);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::RemoveItem: GetParentId Fail: " << relative_path << std::endl;
 			return false;
 		}
 
@@ -123,6 +138,7 @@ namespace monitor_client {
 
 		std::wstring item_name;
 		if (!common_utility::SplitPath(relative_path, nullptr, item_name)) {
+			std::wcerr << L"LocalDb::RemoveItem: SplitPath Fail: " << relative_path << std::endl;
 			return false;
 		}
 
@@ -139,12 +155,14 @@ namespace monitor_client {
 
 			result = item_dao_->GetItemId(delete_info.first, delete_info.second);
 			if (!result.has_value()) {
+				std::wcerr << L"LocalDb::RemoveItem: GetItemId Fail: " << delete_info.first << L' ' << delete_info.second << std::endl;
 				return false;
 			}
 
 			int item_id = result.value();
 			std::optional<std::vector<common_utility::FileInfo>> get_contain_list = item_dao_->GetFolderContainList(item_id);
 			if (!get_contain_list.has_value()) {
+				std::wcerr << L"LocalDb::RemoveItem: GetFolderContainList Fail: " << item_id << std::endl;
 				return false;
 			}
 
@@ -163,6 +181,7 @@ namespace monitor_client {
 		for (const auto& delete_info : delete_list) {
 			result = item_dao_->DeleteItemInfo(delete_info.first, delete_info.second);
 			if (!result.has_value()) {
+				std::wcerr << L"LocalDb::RemoveItem: DeleteItemInfo Fail: " << delete_info.first << L' ' << delete_info.second << std::endl;
 				return false;
 			}
 
@@ -174,11 +193,13 @@ namespace monitor_client {
 
 	bool LocalDb::AddFile(const common_utility::FileInfo& info) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::AddFile: item_dao_ is null" << std::endl;
 			return false;
 		}
 
 		std::optional<int> result = GetParentId(info.name);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::AddFile: GetParentId Fail: " << info.name << std::endl;
 			return false;
 		}
 
@@ -186,6 +207,7 @@ namespace monitor_client {
 
 		std::wstring item_name;
 		if (!common_utility::SplitPath(info.name, nullptr, item_name)) {
+			std::wcerr << L"LocalDb::AddFile: SplitPath Fail: " << info.name << std::endl;
 			return false;
 		}
 
@@ -194,6 +216,7 @@ namespace monitor_client {
 
 		result = item_dao_->InsertFileInfo(file_info, parent_id);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::AddFile: InsertFileInfo Fail: " << file_info.name << L' ' << parent_id << std::endl;
 			return false;
 		}
 
@@ -202,11 +225,13 @@ namespace monitor_client {
 
 	bool LocalDb::ModifyFile(const common_utility::FileInfo& info) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::ModifyFile: item_dao_ is null" << std::endl;
 			return false;
 		}
 
 		std::optional<int> result = GetParentId(info.name);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::ModifyFile: GetParentId Fail: " << info.name << std::endl;
 			return false;
 		}
 
@@ -214,6 +239,7 @@ namespace monitor_client {
 
 		std::wstring item_name;
 		if (!common_utility::SplitPath(info.name, nullptr, item_name)) {
+			std::wcerr << L"LocalDb::ModifyFile: SplitPath Fail: " << info.name << std::endl;
 			return false;
 		}
 
@@ -222,6 +248,7 @@ namespace monitor_client {
 
 		result = item_dao_->ModifyFileInfo(file_info, parent_id);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::ModifyFile: ModifyFileInfo Fail: " << file_info.name << L' ' << parent_id << std::endl;
 			return false;
 		}
 
@@ -230,11 +257,13 @@ namespace monitor_client {
 
 	bool LocalDb::AddFolder(const common_utility::FolderInfo& info) {
 		if (!item_dao_) {
+			std::wcerr << L"LocalDb::AddFolder: item_dao_ is null" << std::endl;
 			return false;
 		}
 
 		std::optional<int> result = GetParentId(info.name);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::AddFolder: GetParentId Fail: " << info.name << std::endl;
 			return false;
 		}
 
@@ -242,6 +271,7 @@ namespace monitor_client {
 
 		std::wstring item_name;
 		if (!common_utility::SplitPath(info.name, nullptr, item_name)) {
+			std::wcerr << L"LocalDb::AddFolder: SplitPath Fail: " << info.name << std::endl;
 			return false;
 		}
 
@@ -250,6 +280,7 @@ namespace monitor_client {
 
 		result = item_dao_->InsertFolderInfo(folder_info, parent_id);
 		if (!result.has_value()) {
+			std::wcerr << L"LocalDb::AddFolder: InsertFolderInfo Fail: " << folder_info.name << L' ' << parent_id << std::endl;
 			return false;
 		}
 

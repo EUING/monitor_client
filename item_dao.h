@@ -35,11 +35,11 @@ namespace monitor_client {
 		std::optional<int> GetItemId(const std::wstring& item_name, int parent_id) const override { return 0; }
 		std::optional<monitor_client::common_utility::FileInfo> GetFileInfo(const std::wstring& file_name, int parent_id) const override { return monitor_client::common_utility::FileInfo(); }
 		std::optional<std::vector<monitor_client::common_utility::FileInfo>> GetFolderContainList(int parent_id) const override { return std::vector<monitor_client::common_utility::FileInfo>(); }
-		std::optional<int> ChangeItemName(const monitor_client::common_utility::ChangeNameInfo& name_info, int parent_id) override { return 0; }
-		std::optional<int> DeleteItemInfo(const std::wstring& item_name, int parent_id) override { return 0; }
-		std::optional<int> InsertFileInfo(const monitor_client::common_utility::FileInfo& file_info, int parent_id) override { return 0; }
-		std::optional<int> ModifyFileInfo(const monitor_client::common_utility::FileInfo& file_info, int parent_id) override { return 0; }
-		std::optional<int> InsertFolderInfo(const monitor_client::common_utility::FolderInfo& folder_info, int parent_id) override { return 0; }
+		std::optional<int> ChangeItemName(const monitor_client::common_utility::ChangeNameInfo& name_info, int parent_id) override { return 1; }
+		std::optional<int> DeleteItemInfo(const std::wstring& item_name, int parent_id) override { return 1; }
+		std::optional<int> InsertFileInfo(const monitor_client::common_utility::FileInfo& file_info, int parent_id) override { return 1; }
+		std::optional<int> ModifyFileInfo(const monitor_client::common_utility::FileInfo& file_info, int parent_id) override { return 1; }
+		std::optional<int> InsertFolderInfo(const monitor_client::common_utility::FolderInfo& folder_info, int parent_id) override { return 1; }
 	};
 }  // namespace monitor_client
 #endif

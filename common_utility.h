@@ -39,6 +39,7 @@ namespace common_utility {
 		int port;
 	};
 	
+	std::optional<bool> IsDirectory(const std::wstring& path);
 	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time);
 	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path);
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path);
