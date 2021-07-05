@@ -19,9 +19,9 @@ namespace monitor_client {
 			return false;
 		}
 
-		int count = sqlite_wrapper_->ExecuteUpdate(L"CREATE TABLE IF NOT EXISTS items(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, parent_id INTEGER NOT NULL, name TEXT NOT NULL, size INTERGER, hash TEXT, UNIQUE(parent_id, name));");
-		if (count < 0) {
-			std::wcerr << L"ItemDaoSqlite::OpenDatabase: ExecuteUpdate Fail" << std::endl;
+		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(L"CREATE TABLE IF NOT EXISTS items(id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, parent_id INTEGER NOT NULL, name TEXT NOT NULL, size INTERGER, hash TEXT, UNIQUE(parent_id, name));");
+		if (sqlite_manager::SqlError::SQLITE_OK != error) {
+			std::wcerr << L"ItemDaoSqlite::OpenDatabase: ExecuteUpdate Fail: " << sqlite_wrapper_->GetLastError() << std::endl;
 			return false;
 		}
 
@@ -37,7 +37,7 @@ namespace monitor_client {
 		std::wstring query = common_utility::format_wstring(L"SELECT id FROM items WHERE name='%s' and parent_id=%d;", item_name.c_str(), parent_id);
 		std::optional<std::vector<sqlite_manager::utf16::DataSet>> result = sqlite_wrapper_->ExecuteQuery(query);
 		if (!result.has_value()) {
-			std::wcerr << L"ItemDaoSqlite::GetItemId: ExecuteQuery Fail: " << query  <<std::endl;
+			std::wcerr << L"ItemDaoSqlite::GetItemId: ExecuteQuery Fail: " << query  << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
@@ -59,7 +59,7 @@ namespace monitor_client {
 		std::wstring query = common_utility::format_wstring(L"SELECT name, size FROM items WHERE name='%s' and parent_id=%d;", file_name.c_str(), parent_id);
 		std::optional<std::vector<sqlite_manager::utf16::DataSet>> result = sqlite_wrapper_->ExecuteQuery(query);
 		if (!result.has_value()) {
-			std::wcerr << L"ItemDaoSqlite::GetItemId: ExecuteQuery Fail: " << query << std::endl;
+			std::wcerr << L"ItemDaoSqlite::GetItemId: ExecuteQuery Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
@@ -85,7 +85,7 @@ namespace monitor_client {
 		std::wstring query = common_utility::format_wstring(L"SELECT name, size FROM items WHERE parent_id=%d;", parent_id);
 		std::optional<std::vector<sqlite_manager::utf16::DataSet>> result = sqlite_wrapper_->ExecuteQuery(query);
 		if (!result.has_value()) {
-			std::wcerr << L"ItemDaoSqlite::GetItemId: ExecuteQuery Fail: " << query << std::endl;
+			std::wcerr << L"ItemDaoSqlite::GetItemId: ExecuteQuery Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
@@ -113,13 +113,13 @@ namespace monitor_client {
 		}
 
 		std::wstring query = common_utility::format_wstring(L"UPDATE items SET name='%s' WHERE name='%s' and parent_id=%d;", name_info.new_name.c_str(), name_info.old_name.c_str(), parent_id);
-		int result = sqlite_wrapper_->ExecuteUpdate(query);
-		if (result < 0) {
-			std::wcerr << L"ItemDaoSqlite::ChangeItemName: ExecuteUpdate Fail: " << query << std::endl;
+		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
+		if (sqlite_manager::SqlError::SQLITE_OK != error) {
+			std::wcerr << L"ItemDaoSqlite::ChangeItemName: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
-		return result;
+		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 
 	std::optional<int> ItemDaoSqlite::DeleteItemInfo(const std::wstring& item_name, int parent_id) {
@@ -129,13 +129,13 @@ namespace monitor_client {
 		}
 
 		std::wstring query = common_utility::format_wstring(L"DELETE FROM items WHERE name='%s' and parent_id=%d;", item_name.c_str(), parent_id);
-		int result = sqlite_wrapper_->ExecuteUpdate(query);
-		if (result < 0) {
-			std::wcerr << L"ItemDaoSqlite::DeleteItemInfo: ExecuteUpdate Fail: " << query << std::endl;
+		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
+		if (sqlite_manager::SqlError::SQLITE_OK != error) {
+			std::wcerr << L"ItemDaoSqlite::DeleteItemInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
-		return result;
+		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 
 	std::optional<int> ItemDaoSqlite::InsertFileInfo(const common_utility::FileInfo& file_info, int parent_id) {
@@ -145,13 +145,13 @@ namespace monitor_client {
 		}
 
 		std::wstring query = common_utility::format_wstring(L"INSERT INTO items(size, name, parent_id) VALUES(%d, '%s', %d);", file_info.size, file_info.name.c_str(), parent_id);
-		int result = sqlite_wrapper_->ExecuteUpdate(query);
-		if (result < 0) {
-			std::wcerr << L"ItemDaoSqlite::InsertFileInfo: ExecuteUpdate Fail: " << query << std::endl;
+		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
+		if (sqlite_manager::SqlError::SQLITE_OK != error) {
+			std::wcerr << L"ItemDaoSqlite::InsertFileInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
-		return result;
+		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 
 	std::optional<int> ItemDaoSqlite::ModifyFileInfo(const common_utility::FileInfo& file_info, int parent_id) {
@@ -161,13 +161,13 @@ namespace monitor_client {
 		}
 
 		std::wstring query = common_utility::format_wstring(L"UPDATE items SET size=%d WHERE name='%s' and parent_id=%d;", file_info.size, file_info.name.c_str(), parent_id);
-		int result = sqlite_wrapper_->ExecuteUpdate(query);
-		if (result < 0) {
-			std::wcerr << L"ItemDaoSqlite::ModifyFileInfo: ExecuteUpdate Fail: " << query << std::endl;
+		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
+		if (sqlite_manager::SqlError::SQLITE_OK != error) {
+			std::wcerr << L"ItemDaoSqlite::ModifyFileInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
-		return result;
+		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 
 	std::optional<int> ItemDaoSqlite::InsertFolderInfo(const common_utility::FolderInfo& folder_info, int parent_id) {
@@ -177,12 +177,12 @@ namespace monitor_client {
 		}
 
 		std::wstring query = common_utility::format_wstring(L"INSERT INTO items(name, parent_id) VALUES('%s', %d);", folder_info.name.c_str(), parent_id);
-		int result = sqlite_wrapper_->ExecuteUpdate(query);
-		if (result < 0) {
-			std::wcerr << L"ItemDaoSqlite::InsertFolderInfo: ExecuteUpdate Fail: " << query << std::endl;
+		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
+		if (sqlite_manager::SqlError::SQLITE_OK != error) {
+			std::wcerr << L"ItemDaoSqlite::InsertFolderInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
-		return result;
+		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 }  // namespace monitor_client
