@@ -26,7 +26,7 @@ namespace monitor_client {
 
 		bool Run();
 		void Stop();
-		bool IsRunning();
+		bool IsRunning() const;
 		bool ManagementItem(const common_utility::ChangeItemInfo& info);
 
 	private:

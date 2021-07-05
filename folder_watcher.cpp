@@ -29,7 +29,7 @@ namespace monitor_client {
 		}
 	}
 
-	bool FolderWatcher::IsRunning() {
+	bool FolderWatcher::IsRunning() const {
 		return thread_future_.valid() && std::future_status::timeout == thread_future_.wait_for(std::chrono::milliseconds(0));
 	}
 

@@ -23,10 +23,10 @@ namespace monitor_client {
 
 		~FolderWatcher();
 
-		bool IsRunning();
+		bool IsRunning() const;
 		void StopWatching();
 		bool StartWatching();
-		std::wstring GetWatchFolder() { return watch_folder_; }
+		std::wstring GetWatchFolder() const { return watch_folder_; }
 		void SetWatchFolder(const std::wstring& watch_folder) { watch_folder_ = watch_folder; }
 
 	private:

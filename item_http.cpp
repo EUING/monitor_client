@@ -41,7 +41,9 @@ namespace monitor_client {
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::DEL).get();
-		if (response.status_code() == web::http::status_codes::NoContent) {
+		switch (response.status_code()) {
+		case web::http::status_codes::OK:
+		case web::http::status_codes::NoContent:
 			return true;
 		}
 

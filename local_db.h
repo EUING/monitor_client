@@ -21,8 +21,8 @@ namespace monitor_client {
 
 		~LocalDb() = default;
 
-		std::optional<int> GetParentId(const std::wstring& relative_path);
-		std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& relative_path);
+		std::optional<int> GetParentId(const std::wstring& relative_path) const;
+		std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& relative_path) const;
 
 		bool RenameItem(const common_utility::ChangeNameInfo& name_info);
 		bool RemoveItem(const std::wstring& relative_path);
