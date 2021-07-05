@@ -86,7 +86,7 @@ namespace monitor_client {
 		builder_.set_path(path_variable, true);
 		web::http::client::http_client client(builder_.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PATCH, U("/"), patch_data).get();
-		if (response.status_code() != web::http::status_codes::OK) {
+		if (response.status_code() == web::http::status_codes::OK) {
 			return true;
 		}
 
