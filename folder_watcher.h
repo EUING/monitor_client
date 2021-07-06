@@ -8,7 +8,7 @@
 #include <string>
 #include <memory>
 
-#include "notify_queue.h"
+#include "event_handler.h"
 
 namespace monitor_client {
 	class FolderWatcher {
@@ -32,13 +32,12 @@ namespace monitor_client {
 	private:
 		bool InitWatching(std::shared_ptr<void>& folder_handle_ptr, std::shared_ptr<void>& overlap_event_ptr);
 		void WatchingDirectory(std::shared_ptr<void> folder_handle_ptr, std::shared_ptr<void> overlap_event_ptr);
-		void PushItem(const std::wstring& relative_path);
 		void CloseEvent();
 
 		std::future<void> thread_future_;
 		HANDLE stop_watching_event_;  // 감시 종료 이벤트
 		std::wstring watch_folder_;  // 감시하는 경로
-		std::shared_ptr<NotifyQueue> notify_queue_;
+		EventHandler event_handler_;
 	};
 
 }  // namespace monitor_client

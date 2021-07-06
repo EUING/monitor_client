@@ -11,7 +11,7 @@
 namespace monitor_client {
 	class LocalDb {
 	public:
-		LocalDb(std::unique_ptr<ItemDao>&& item_dao);
+		explicit LocalDb(std::unique_ptr<ItemDao>&& item_dao);
 
 		LocalDb(const LocalDb&) = delete;
 		LocalDb& operator=(const LocalDb&) = delete;

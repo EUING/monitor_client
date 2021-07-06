@@ -10,11 +10,11 @@
 #include <memory>
 
 #include "common_utility.h"
-#include "notify_queue.h"
+#include "event_handler.h"
 
 namespace monitor_client {
 	FolderWatcher::FolderWatcher(std::shared_ptr<NotifyQueue> notify_queue, const std::wstring& watch_folder /*= L""*/)
-		: thread_future_{}, stop_watching_event_(NULL), notify_queue_(notify_queue), watch_folder_(watch_folder) {
+		: thread_future_{}, stop_watching_event_(NULL), event_handler_(notify_queue), watch_folder_(watch_folder) {
 	}
 
 	FolderWatcher::~FolderWatcher() {
@@ -168,38 +168,7 @@ namespace monitor_client {
 					break;
 				}
 
-				FILE_NOTIFY_INFORMATION* fni = nullptr;
-				bool is_first = true;
-
-				for (DWORD offset = 0; is_first || fni->NextEntryOffset != 0; offset += fni->NextEntryOffset) {
-					is_first = false;
-					fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer.get()[offset]);
-
-					std::wstring result_name;
-					if (FILE_ACTION_ADDED == fni->Action) {
-						std::wstring name(fni->FileName, fni->FileNameLength / 2);
-						PushItem(name);
-						continue;
-					}
-					else if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
-						std::wstring old_name(fni->FileName, fni->FileNameLength / 2);
-
-						offset += fni->NextEntryOffset;
-						fni = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(&buffer.get()[offset]);  // NEW_NAME을 알기 위해 offset을 증가
-
-						std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
-						result_name = old_name + L'?' + new_name;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
-					}
-					else {
-						std::wstring name(fni->FileName, fni->FileNameLength / 2);
-						result_name = name;
-					}
-
-					std::wclog << fni->Action << L" " << result_name << std::endl;
-					if (notify_queue_) {
-						notify_queue_->Push({ fni->Action, result_name });
-					}
-				}
+				event_handler_.PushEvent(buffer.get());
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
 				break;
@@ -211,39 +180,5 @@ namespace monitor_client {
 		}
 		
 		CloseEvent();
-	}
-
-	void FolderWatcher::PushItem(const std::wstring& relative_path) {
-		std::wclog << FILE_ACTION_ADDED << L" " << relative_path << std::endl;
-		notify_queue_->Push({ FILE_ACTION_ADDED, relative_path });
-
-		std::optional<bool> is_dir = common_utility::IsDirectory(relative_path);
-		if (!is_dir.has_value()) {
-			std::wcerr << L"FolderWatcher::PushItem: IsDirectory Fail: "  << relative_path << std::endl;
-			return;
-		}		
-
-		if (!is_dir.value()) {
-			return;
-		}
-
-		WIN32_FIND_DATA find_data;
-		std::wstring fname = relative_path + L"\\*.*";
-
-		HANDLE handle = FindFirstFile(fname.c_str(), &find_data);
-		if (INVALID_HANDLE_VALUE != handle) {
-			do {
-				std::wstring file_name(find_data.cFileName);
-				if (L"." == file_name || L".." == file_name) {
-					continue;
-				}
-
-				std::wstring relative_path_name = relative_path + L"\\" + file_name;
-				PushItem(relative_path_name);
-
-			} while (FindNextFile(handle, &find_data));
-		}
-
-		FindClose(handle);
 	}
 }  // namespace monitor_client

@@ -21,29 +21,32 @@ namespace monitor_client {
 			is_first = false;
 			fni = reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(&buffer[offset]);
 
-			std::wstring result_name;
 			if (FILE_ACTION_ADDED == fni->Action) {
 				std::wstring name(fni->FileName, fni->FileNameLength / 2);
 				PushAddEvent(name);
 				continue;
 			}
-			else if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
-				std::wstring old_name(fni->FileName, fni->FileNameLength / 2);
+			else
+			{
+				std::wstring result_name;
+				if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
+					std::wstring old_name(fni->FileName, fni->FileNameLength / 2);
 
-				offset += fni->NextEntryOffset;
-				fni = reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(&buffer[offset]);  // NEW_NAME을 알기 위해 offset을 증가
+					offset += fni->NextEntryOffset;
+					fni = reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(&buffer[offset]);  // NEW_NAME을 알기 위해 offset을 증가
 
-				std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
-				result_name = old_name + L'?' + new_name;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
-			}
-			else {
-				std::wstring name(fni->FileName, fni->FileNameLength / 2);
-				result_name = name;
-			}
+					std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
+					result_name = old_name + L'?' + new_name;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
+				}
+				else {
+					std::wstring name(fni->FileName, fni->FileNameLength / 2);
+					result_name = name;
+				}
 
-			std::wclog << fni->Action << L' ' << result_name << std::endl;
-			if (notify_queue_) {
-				notify_queue_->Push({ fni->Action, result_name });
+				std::wclog << fni->Action << L' ' << result_name << std::endl;
+				if (notify_queue_) {
+					notify_queue_->Push({ fni->Action, result_name });
+				}
 			}
 		}
 	}
