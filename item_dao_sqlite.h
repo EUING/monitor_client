@@ -26,14 +26,13 @@ namespace monitor_client {
 
 		bool OpenDatabase(const std::wstring& database_path) override;
 		std::optional<int> GetItemId(const std::wstring& item_name, int parent_id) const override;
-		std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& file_name, int parent_id) const override;
-		std::optional<std::vector<common_utility::FileInfo>> GetFolderContainList(int parent_id) const override;
+		std::optional<common_utility::ItemInfo> GetItemInfo(const std::wstring& file_name, int parent_id) const override;
+		std::optional<std::vector<common_utility::ItemInfo>> GetFolderContainList(int parent_id) const override;
 
 		std::optional<int> ChangeItemName(const common_utility::ChangeNameInfo& name_info, int parent_id) override;
 		std::optional<int> DeleteItemInfo(const std::wstring& item_name, int parent_id) override;
-		std::optional<int> InsertFileInfo(const common_utility::FileInfo& file_info, int parent_id) override;
-		std::optional<int> ModifyFileInfo(const common_utility::FileInfo& file_info, int parent_id) override;
-		std::optional<int> InsertFolderInfo(const common_utility::FolderInfo& folder_info, int parent_id) override;
+		std::optional<int> InsertItemInfo(const common_utility::ItemInfo& item_info, int parent_id) override;
+		std::optional<int> ModifyItemInfo(const common_utility::ItemInfo& item_info, int parent_id) override;
 
 	private:
 		std::unique_ptr<sqlite_manager::utf16::SqliteWrapper> sqlite_wrapper_;

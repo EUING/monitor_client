@@ -22,15 +22,11 @@ namespace monitor_client {
 		~LocalDb() = default;
 
 		std::optional<int> GetParentId(const std::wstring& relative_path) const;
-		std::optional<common_utility::FileInfo> GetFileInfo(const std::wstring& relative_path) const;
+		std::optional<common_utility::ItemInfo> GetItemInfo(const std::wstring& relative_path) const;
 
+		bool InsertItem(const common_utility::ItemInfo& item_info);
 		bool RenameItem(const common_utility::ChangeNameInfo& name_info);
 		bool RemoveItem(const std::wstring& relative_path);
-
-		bool AddFile(const common_utility::FileInfo& info);
-		bool ModifyFile(const common_utility::FileInfo& info);
-
-		bool AddFolder(const common_utility::FolderInfo& info);
 
 	private:
 		std::unique_ptr<ItemDao> item_dao_;

@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <stdint.h>
 
+#include <optional>
 #include <iostream>
 #include <string>
 
@@ -38,6 +39,20 @@ namespace monitor_client {
 					std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
 					result_name = old_name + L'?' + new_name;  // 기존 파일명과 새로운 파일명을 '?'으로 구분
 				}
+				else if (FILE_ACTION_MODIFIED == fni->Action) {
+					std::wstring name(fni->FileName, fni->FileNameLength / 2);
+					std::optional<bool> is_dir = common_utility::IsDirectory(name);
+					if (!is_dir.has_value()) {
+						std::wcerr << L"EventHandler::PushEvent: IsDirectory Fail: " << name << std::endl;
+						continue;
+					}
+
+					if (is_dir.value()) {
+						continue;  // 폴더 수정 이벤트는 무시
+					}
+
+					result_name = name;
+				}
 				else {
 					std::wstring name(fni->FileName, fni->FileNameLength / 2);
 					result_name = name;
@@ -59,7 +74,7 @@ namespace monitor_client {
 
 		std::optional<bool> is_dir = common_utility::IsDirectory(relative_path);
 		if (!is_dir.has_value()) {
-			std::wcerr << L"FolderWatcher::PushItem: IsDirectory Fail: " << relative_path << std::endl;
+			std::wcerr << L"EventHandler::PushAddEvent: IsDirectory Fail: " << relative_path << std::endl;
 			return;
 		}
 

@@ -1,6 +1,7 @@
 #include "common_utility.h"
 
 #include <Windows.h>
+#include <stdint.h>
 
 #include <iostream>
 #include <iomanip>
@@ -20,65 +21,26 @@ namespace common_utility {
 		return (attribute & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time) {
-		SYSTEMTIME utc;
-		if (!FileTimeToSystemTime(&time, &utc)) {
-			std::wcerr << L"common_utility::ConvertTimestamp: FileTimeToSystemTime Fail" << std::endl;
-			return std::nullopt;
-		}
-
-		SYSTEMTIME local_time;
-		if (!SystemTimeToTzSpecificLocalTime(NULL, &utc, &local_time)) {
-			std::wcerr << L"common_utility::ConvertTimestamp: SystemTimeToTzSpecificLocalTime Fail" << std::endl;
-			return std::nullopt;
-		}
-
-		std::wostringstream stream;
-		const auto w2 = std::setw(2);
-		stream << std::setfill(L'0') << std::setw(4) << local_time.wYear << L'-' << w2 << local_time.wMonth << L'-' << w2 << local_time.wDay << L' ';
-		stream << w2 << local_time.wHour << L':' << w2 << local_time.wMinute << L':' << w2 << local_time.wSecond;
-
-		return stream.str();
-	}
-
-	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path) {
+	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path) {
 		WIN32_FILE_ATTRIBUTE_DATA file_attribute;
 		if (!GetFileAttributesEx(relative_path.c_str(), GetFileExInfoStandard, &file_attribute)) {
 			std::wcerr << L"common_utility::GetItemInfo: GetFileAttributesEx Fail: " << relative_path << std::endl;
-			return {};
+			return std::nullopt;
 		}
 
-		std::optional<std::wstring> creation_result = ConvertTimestamp(file_attribute.ftCreationTime);
-		if (!creation_result.has_value()) {
-			std::wcerr << L"common_utility::GetItemInfo: ConvertTimestamp Fail" << std::endl;
-			return {};
-		}
-
-		if (0 != (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			FolderInfo info;
-			info.name = relative_path;
-			info.creation_time = creation_result.value();
-			return info;
-		}
-		else {
-			std::optional<std::wstring> write_result = ConvertTimestamp(file_attribute.ftLastWriteTime);
-			if (!write_result.has_value()) {
-				std::wcerr << L"common_utility::GetItemInfo: ConvertTimestamp Fail" << std::endl;
-				return {};
-			}
-
-			ULARGE_INTEGER li;
+		int64_t size = -1;
+		if (0 == (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			LARGE_INTEGER li;
 			li.LowPart = file_attribute.nFileSizeLow;
 			li.HighPart = file_attribute.nFileSizeHigh;
-
-			FileInfo info;
-			info.name = relative_path;
-			info.size = li.QuadPart;
-			info.creation_time = creation_result.value();
-			info.last_modified_time = write_result.value();
-
-			return info;
+			size = li.QuadPart;
 		}
+
+		ItemInfo info;
+		info.name = relative_path;
+		info.size = size;
+
+		return info;
 	}
 
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path) {

@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <chrono>
-#include <variant>
 #include <future>
 #include <optional>
 #include <algorithm>
@@ -70,51 +69,46 @@ namespace monitor_client {
 
 	bool ItemManager::ManagementItem(const common_utility::ChangeItemInfo& info) {
 		switch (info.action) {
-		case FILE_ACTION_ADDED: {
-			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.relative_path);
-			if (1 == result.index()) {
-				common_utility::FileInfo file_info = std::get<common_utility::FileInfo>(result);
-				std::replace(file_info.name.begin(), file_info.name.end(), L'\\', L'/');  // Window path to Posix path
-				if (!item_http_.AddFile(file_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: item_http_.AddFile Fail: " << file_info.name << std::endl;
-					return false;
-				}
-				
-				if (!local_db_.AddFile(file_info)) {
-					return false;
-				}
+		case FILE_ACTION_ADDED:
+		case FILE_ACTION_MODIFIED: {
+			std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(info.relative_path);
+			if (!item_info_opt.has_value()) {
+				std::wcerr << L"ItemManager::ManagementItem: GetItemInfo Fail: " << info.relative_path << std::endl;
+				return false;
 			}
-			else if (2 == result.index()) {
-				common_utility::FolderInfo folder_info = std::get<common_utility::FolderInfo>(result);
-				std::replace(folder_info.name.begin(), folder_info.name.end(), L'\\', L'/');  // Window path to Posix path
-				if (!item_http_.AddFolder(folder_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: item_http_.AddFolder Fail: " << folder_info.name << std::endl;
-					return false;
-				}
 
-				if (!local_db_.AddFolder(folder_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: local_db_.AddFolder Fail: " << folder_info.name << std::endl;
-					return false;
-				}
+			auto item_info = item_info_opt.value();
+
+			std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
+			if (!item_http_.InsertItem(item_info)) {
+				std::wcerr << L"ItemManager::ManagementItem: item_http_.InsertItem Fail: " << item_info.name << std::endl;
+				return false;
+			}
+
+			if (!local_db_.InsertItem(item_info)) {
+				std::wcerr << L"ItemManager::ManagementItem: local_db_.InsertItem Fail: " << item_info.name << std::endl;
+				return false;
 			}
 
 			break;
 		}
-		case FILE_ACTION_MODIFIED: {
-			std::variant<std::monostate, common_utility::FileInfo, common_utility::FolderInfo> result = common_utility::GetItemInfo(info.relative_path);
-			if (1 == result.index()) {
-				common_utility::FileInfo file_info = std::get<common_utility::FileInfo>(result);
-				std::replace(file_info.name.begin(), file_info.name.end(), L'\\', L'/');  // Window path to Posix path
-				if (!item_http_.ModifyFile(file_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: item_http_.ModifyFile Fail: " << file_info.name << std::endl;
+		case FILE_ACTION_RENAMED_NEW_NAME: {
+			std::optional<common_utility::ChangeNameInfo> result = common_utility::SplitChangeName(info.relative_path);
+			if (result.has_value()) {
+				common_utility::ChangeNameInfo change_name_info;
+				std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
+				std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
+
+				if (!item_http_.RenameItem(change_name_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: item_http_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
 					return false;
 				}
 
-				if (!local_db_.ModifyFile(file_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: local_db_.ModifyFile Fail: " << file_info.name << std::endl;
+				if (!local_db_.RenameItem(change_name_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: local_db_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
 					return false;
 				}
-			}  // Æú´õ MODIFIED´Â SKIP
+			}
 			break;
 		}
 		case FILE_ACTION_REMOVED: {
@@ -128,24 +122,6 @@ namespace monitor_client {
 			if (!local_db_.RemoveItem(item_path)) {
 				std::wcerr << L"ItemManager::ManagementItem: local_db_.RemoveItem Fail: " << item_path << std::endl;
 				return false;
-			}
-			break;
-		}
-		case FILE_ACTION_RENAMED_NEW_NAME: {
-			std::optional<common_utility::ChangeNameInfo> result = common_utility::SplitChangeName(info.relative_path);
-			if (result.has_value()) {
-				common_utility::ChangeNameInfo change_name_info;
-				std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
-				std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
-				if (!item_http_.RenameItem(change_name_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: item_http_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
-					return false;
-				}
-
-				if (!local_db_.RenameItem(change_name_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: local_db_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
-					return false;
-				}
 			}
 			break;
 		}

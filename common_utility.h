@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #include <memory>
-#include <variant>
 #include <optional>
 #include <string>
 #include <vector>
@@ -22,16 +21,10 @@ namespace common_utility {
 		std::wstring new_name;
 	};
 
-	struct FileInfo {
+	struct ItemInfo {
 		std::wstring name;
 		int64_t size;
-		std::wstring creation_time;
-		std::wstring last_modified_time;
-	};
-
-	struct FolderInfo {
-		std::wstring name;
-		std::wstring creation_time;
+		std::wstring hash;
 	};
 
 	struct NetworkInfo {
@@ -40,8 +33,7 @@ namespace common_utility {
 	};
 	
 	std::optional<bool> IsDirectory(const std::wstring& path);
-	std::optional<std::wstring> ConvertTimestamp(const FILETIME& time);
-	std::variant<std::monostate, FileInfo, FolderInfo> GetItemInfo(const std::wstring& relative_path);
+	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path);
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path);
 	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name);
 
