@@ -95,7 +95,7 @@ namespace monitor_client {
 		case FILE_ACTION_RENAMED_NEW_NAME: {
 			std::optional<common_utility::ChangeNameInfo> result = common_utility::SplitChangeName(info.relative_path);
 			if (result.has_value()) {
-				common_utility::ChangeNameInfo change_name_info;
+				common_utility::ChangeNameInfo change_name_info = result.value();
 				std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
 				std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
 

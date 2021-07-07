@@ -1,6 +1,7 @@
 #include "common_utility.h"
 
 #include <Windows.h>
+#include <atlstr.h>
 #include <stdint.h>
 
 #include <iostream>
@@ -8,6 +9,9 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <fstream>
+
+#include "sha256.h"
 
 namespace monitor_client {
 namespace common_utility {
@@ -29,16 +33,25 @@ namespace common_utility {
 		}
 
 		int64_t size = -1;
+		std::wstring hash;
 		if (0 == (file_attribute.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			std::optional<std::wstring> sha256 = GetSha256(relative_path);
+			if (!sha256.has_value()) {
+				std::wcerr << L"common_utility::GetItemInfo: GetSha256 Fail: " << relative_path << std::endl;
+				return std::nullopt;
+			}
+
 			LARGE_INTEGER li;
 			li.LowPart = file_attribute.nFileSizeLow;
 			li.HighPart = file_attribute.nFileSizeHigh;
 			size = li.QuadPart;
+			hash = sha256.value();
 		}
 
 		ItemInfo info;
 		info.name = relative_path;
 		info.size = size;
+		info.hash = hash;
 
 		return info;
 	}
@@ -100,6 +113,36 @@ namespace common_utility {
 		}
 
 		return true;
+	}
+
+	std::optional<std::wstring> GetSha256(std::wstring file_path) {
+		std::ifstream is(file_path, std::ifstream::binary);
+		if (!is) {
+			return std::nullopt;
+		}
+		
+		is.seekg(0, std::ifstream::end);
+		int length = (int)is.tellg();
+		is.seekg(0, std::ifstream::beg);
+
+		std::vector<unsigned char> buffer(length, 0);
+		auto raw_pointer = buffer.data();
+		is.read(reinterpret_cast<char*>(raw_pointer), length);
+		is.close();
+
+		unsigned char digest[SHA256::DIGEST_SIZE] = { 0, };
+			
+		SHA256 ctx;
+		ctx.init();
+		ctx.update(raw_pointer, length);
+		ctx.final(digest);
+
+		char buf[2 * SHA256::DIGEST_SIZE + 1] = { 0, };
+		for (int i = 0; i < SHA256::DIGEST_SIZE; i++) {
+			sprintf_s(buf + (i * 2), sizeof(buf) - (i * 2), "%02x", digest[i]);
+		}
+
+		return CA2W(buf).m_psz;
 	}
 }  // namespace common_utility
 }  // namespace monitor_client
