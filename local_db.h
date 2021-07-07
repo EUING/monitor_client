@@ -23,6 +23,7 @@ namespace monitor_client {
 
 		std::optional<int> GetParentId(const std::wstring& relative_path) const;
 		std::optional<common_utility::ItemInfo> GetItemInfo(const std::wstring& relative_path) const;
+		std::optional<std::vector<common_utility::ItemInfo>> GetFolderContainList(const std::wstring& relative_path = L"") const;
 
 		bool InsertItem(const common_utility::ItemInfo& item_info);
 		bool RenameItem(const common_utility::ChangeNameInfo& name_info);

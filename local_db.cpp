@@ -82,6 +82,56 @@ namespace monitor_client {
 		return item_dao_->GetItemInfo(item_name, parent_id);
 	}
 
+	std::optional<std::vector<common_utility::ItemInfo>> LocalDb::GetFolderContainList(const std::wstring& relative_path /*= L""*/) const {
+		if (!item_dao_) {
+			std::wcerr << L"LocalDb::GetFolderContainList: item_dao_ is null" << std::endl;
+			return std::nullopt;
+		}
+
+		int item_id = 0;
+		if (!relative_path.empty()) {
+			std::optional<int> result = GetParentId(relative_path);
+			if (!result.has_value()) {
+				std::wcerr << L"LocalDb::GetFolderContainList: GetParentId Fail: " << relative_path << std::endl;
+				return std::nullopt;
+			}
+
+			std::wstring item_name;
+			if (!common_utility::SplitPath(relative_path, nullptr, item_name)) {
+				std::wcerr << L"LocalDb::GetFolderContainList: SplitPath Fail: " << relative_path << std::endl;
+				return std::nullopt;
+			}
+
+			int parent_id = result.value();
+			std::optional<common_utility::ItemInfo> item_info = item_dao_->GetItemInfo(item_name, parent_id);
+			if (!item_info.has_value()) {
+				std::wcerr << L"LocalDb::GetFolderContainList: item_dao_->GetItemInfo Fail: " << relative_path << std::endl;
+				return std::nullopt;
+			}
+			
+			if (item_info.value().size >= 0) {
+				std::wcerr << L"LocalDb::GetFolderContainList: file cannot have items: " << relative_path << std::endl;
+				return std::nullopt;
+			}
+
+			result = item_dao_->GetItemId(item_name, parent_id);
+			if (!result.has_value()) {
+				std::wcerr << L"LocalDb::GetFolderContainList: GetItemId Fail: " << relative_path << std::endl;
+				return std::nullopt;
+			}
+
+			item_id = result.value();
+		}
+		
+		std::optional<std::vector<common_utility::ItemInfo>> get_contain_list = item_dao_->GetFolderContainList(item_id);
+		if (!get_contain_list.has_value()) {
+			std::wcerr << L"LocalDb::GetFolderContainList: item_dao_->GetFolderContainList Fail: " << item_id << std::endl;
+			return std::nullopt;
+		}
+
+		return get_contain_list;
+	}
+
 	bool LocalDb::InsertItem(const common_utility::ItemInfo& item_info) {
 		if (!item_dao_) {
 			std::wcerr << L"LocalDb::InsertItem: item_dao_ is null" << std::endl;
