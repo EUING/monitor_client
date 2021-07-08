@@ -11,6 +11,29 @@
 
 namespace monitor_client {
 namespace common_utility {
+	struct ItemInfo {
+		std::wstring name;
+		int64_t size;
+		std::wstring hash;
+
+		friend bool operator<(const ItemInfo& lhs, const ItemInfo& rhs);
+		friend bool operator==(const ItemInfo& lhs, const ItemInfo& rhs);
+	};
+}  // namespace common_utility
+}  // namespace monitor_client
+
+namespace std {
+	template<>
+	struct hash<monitor_client::common_utility::ItemInfo> {
+		std::size_t operator() (const monitor_client::common_utility::ItemInfo& info) const noexcept {
+			hash<wstring> hash_func;
+			return hash_func(info.name);
+		}
+	};
+}  // namespace std
+
+namespace monitor_client {
+namespace common_utility {
 	struct ChangeItemInfo {
 		DWORD action;
 		std::wstring relative_path;
@@ -19,13 +42,7 @@ namespace common_utility {
 	struct ChangeNameInfo {
 		std::wstring old_name;
 		std::wstring new_name;
-	};
-
-	struct ItemInfo {
-		std::wstring name;
-		int64_t size;
-		std::wstring hash;
-	};
+	};	
 
 	struct NetworkInfo {
 		std::wstring host;

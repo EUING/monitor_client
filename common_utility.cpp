@@ -15,6 +15,14 @@
 
 namespace monitor_client {
 namespace common_utility {
+	bool operator<(const ItemInfo& lhs, const ItemInfo& rhs) {
+		return lhs.name < rhs.name;
+	}
+
+	bool operator==(const ItemInfo& lhs, const ItemInfo& rhs) {
+		return lhs.name == rhs.name;
+	}
+
 	std::optional<bool> IsDirectory(const std::wstring& path) {
 		DWORD attribute = GetFileAttributes(path.c_str());
 		if (INVALID_FILE_ATTRIBUTES == attribute) {

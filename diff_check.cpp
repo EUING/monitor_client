@@ -1,8 +1,9 @@
 #include "diff_check.h"
 
-#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <string>
+#include <set>
 
 #include "common_utility.h"
 
@@ -27,7 +28,7 @@ namespace common_utility {
 					return;
 				}
 
-				item_list.insert(std::make_pair(relative_path_name, item_info.value()));
+				item_list.insert(item_info.value());
 
 				GetSubFolderInfo(relative_path_name, item_list);
 			} while (FindNextFile(handle, &find_data));
@@ -46,35 +47,116 @@ namespace common_utility {
 		auto sub_item_list = sub_item.value();
 		for (const auto& item : sub_item_list) {
 			std::wstring relative_path = folder_path.empty() ? item.name : folder_path + L'/' + item.name;
-			item_list.insert(std::make_pair(relative_path, item));
+			item_list.insert({ relative_path, item.size, item.hash });
 
 			if (item.size < 0) {
-				GetSubFolderInfo(relative_path, item_list);
+				GetSubFolderInfo(local_db, relative_path, item_list);
+			}
+		}
+	}
+
+	void GetSubFolderInfo(const ItemHttp& item_http, const std::wstring& folder_path, ItemList& item_list) {
+		std::optional<std::vector<common_utility::ItemInfo>> sub_item = item_http.GetFolderContainList(folder_path);
+		if (!sub_item.has_value()) {
+			std::wcerr << L"FolderSynchronizer::Sycnchronize: local_db_.GetFolderContainList Fail: " << folder_path << std::endl;
+			return;
+		}
+
+		auto sub_item_list = sub_item.value();
+		for (const auto& item : sub_item_list) {
+			std::wstring relative_path = folder_path.empty() ? item.name : folder_path + L'/' + item.name;
+			item_list.insert({ relative_path, item.size, item.hash });
+
+			if (item.size < 0) {
+				GetSubFolderInfo(item_http, relative_path, item_list);
 			}
 		}
 	}
 }  // namespace common_utility
 
 namespace diff_check {
-	DiffList MakeDiffList(const common_utility::ItemList& from_os, const common_utility::ItemList& from_db) {
-		DiffList diff_list;
+	bool operator==(const DiffInfo& lhs, const DiffInfo& rhs) {
+		return lhs.os_item.name < rhs.os_item.name;
+	}
+
+	LocalDiffList MakeLocalDiffList(const common_utility::ItemList& from_os, const common_utility::ItemList& from_db) {
+		LocalDiffList local_diff_list;
 		for (const auto& os : from_os) {
-			if (from_db.end() == from_db.find(os.first)) {
-				diff_list.create_list.push_back(os.second);
+			auto db_iter = from_db.find(os);
+			if (from_db.end() == db_iter) {
+				local_diff_list.create_list.insert(os);  // DB에 해당 파일이 없는 경우
 			}
 			else {
-				common_utility::ItemInfo db_info = from_db.at(os.first);
-				common_utility::ItemInfo os_info = os.second;
+				common_utility::ItemInfo db_info = *db_iter;
+				common_utility::ItemInfo os_info = os;
 				if (db_info.hash != os_info.hash) {
-					diff_list.modify_list.push_back({ db_info, os.second });
+					local_diff_list.modify_list.insert({ db_info, os_info });  // DB에 파일의 해시 값이 다른 경우
 				}
 				else {
-					diff_list.equal_list.push_back(os.second);
+					local_diff_list.equal_list.insert(os);
 				}
 			}
 		}
 
-		return diff_list;
+		return local_diff_list;
+	}
+
+	ServerDiffList MakeServerDiffList(const common_utility::ItemList& from_server, const LocalDiffList& local_diff_list) {
+		ServerDiffList server_diff_list;
+		auto copy = from_server;  // 서버 목록을 처리하면 해당 내용을 지우기 위해 복사
+
+		for (const auto& create : local_diff_list.create_list) {
+			copy.erase(create);
+			auto server_iter = from_server.find(create);
+			if (from_server.end() != server_iter) {
+				if (server_iter->hash != create.hash) {
+					server_diff_list.conflict_list.push_back({ *server_iter, create });  // 오프라인에서 생성된 파일과 서버에서 생성된 파일의 해시 값이 다른 경우
+				}				
+			}
+			else {
+				server_diff_list.upload_request_list.push_back(create);  // 오프라인에서 생성된 파일을 서버에서 못 찾은 경우
+			}
+		}
+
+		for (const auto& modify : local_diff_list.modify_list) {
+			copy.erase(modify.os_item);
+			auto server_iter = from_server.find(modify.os_item);
+			if (from_server.end() != server_iter) {
+				if (server_iter->hash != modify.other_item.hash) {
+					server_diff_list.conflict_list.push_back({ *server_iter, modify.os_item });  // 오프라인에서 수정된 파일의 DB 해시 값과 서버 해시 값이 다른 경우
+				}
+				else {
+					server_diff_list.upload_request_list.push_back(modify.os_item);
+				}
+			}
+			else {
+				server_diff_list.upload_request_list.push_back(modify.os_item);  // 서버에서 삭제된 파일을 오프라인에서 수정한 경우
+			}
+		}
+
+		for (const auto& equal : local_diff_list.equal_list) {
+			copy.erase(equal);
+			auto server_iter = from_server.find(equal);
+			if (from_server.end() != server_iter) {
+				if (server_iter->hash != equal.hash) {
+					server_diff_list.download_request_list.push_back(equal.name);
+				}
+			}
+			else {
+				server_diff_list.delete_list.push_back(equal.name);  // 서버에서 삭제된 파일을 수정하지 않은 경우
+			}
+		}
+
+		std::set<std::wstring> new_server_item;
+		for (const auto& iter : copy) {
+			new_server_item.insert(iter.name);  // 생성된 파일 오름차순으로 정렬
+		}
+
+		for (const auto& new_item : new_server_item) {  // 서버에서 생성된 파일
+			server_diff_list.download_request_list.push_back(new_item);
+		}
+
+		return server_diff_list;
 	}
 }  // namespace diff_check
 }  // namespace monitor_client
