@@ -155,6 +155,8 @@ namespace diff_check {
 		for (const auto& new_item : new_server_item) {  // 서버에서 생성된 파일
 			server_diff_list.download_request_list.push_back(new_item);
 		}
+		// XXX new_server_item에 넣어 정렬 후에 넣는것보다, vector에 모두 넣어놓고 모두 정렬하는게 더 빠릅니다.
+		// XXX 이러면 LocalDiffList.create_list에서 set을 사용할 필요도 없습니다.
 
 		return server_diff_list;
 	}

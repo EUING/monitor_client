@@ -13,7 +13,7 @@
 namespace monitor_client {
 namespace diff_check {
 	struct DiffInfo {
-		common_utility::ItemInfo other_item;
+		common_utility::ItemInfo other_item; // XXX other_itemï¿½ï¿½ prev_item_hashï¿½ï¿½ ï¿½Ù²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Ï´ï¿½, other_itemï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ï¿½Ï´ï¿½.
 		common_utility::ItemInfo os_item;
 
 		friend bool operator==(const DiffInfo& lhs, const DiffInfo& rhs);
@@ -41,16 +41,20 @@ namespace common_utility {
 
 namespace diff_check {
 	struct LocalDiffList {
-		std::set<common_utility::ItemInfo> create_list;  // »ý¼ºµÈ ¸ñ·ÏÀº ¿À¸§Â÷¼øÀ¸·Î PUT ÇØ¾ß ÇÔ
+		std::set<common_utility::ItemInfo> create_list;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ PUT ï¿½Ø¾ï¿½ ï¿½ï¿½
 		common_utility::ItemList equal_list;
 		std::unordered_set<DiffInfo> modify_list;
+		// XXX ï¿½ï¿½ï¿½ vectorï¿½ï¿½ ï¿½Ö¾ï¿½ï¿½Ö´Â°ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½, ï¿½Ü¼ï¿½ ï¿½ï¿½È¸ï¿½ï¿½ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½
+		// set, unordered setï¿½ï¿½ forï¿½ï¿½ ï¿½ï¿½È¸ï¿½Ï´Â°ï¿½ vectorï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½
+		// setï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½Ãµï¿½Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ø¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ô´Ï´ï¿½.
+		// ï¿½Ì¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ MakeServerDiffListï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Ï´ï¿½
 	};
 
 	struct ServerDiffList {
 		std::vector<common_utility::ItemInfo> upload_request_list;
 		std::vector<std::wstring> download_request_list;
 		std::vector<std::wstring> delete_list;
-		std::vector<DiffInfo> conflict_list;
+		std::vector<DiffInfo> conflict_list; // XXX conflict_listï¿½ï¿½ wstringï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½Ô´Ï´ï¿½
 	};
 
 	LocalDiffList MakeLocalDiffList(const common_utility::ItemList& from_os, const common_utility::ItemList& from_db);
