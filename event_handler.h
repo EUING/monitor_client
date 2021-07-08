@@ -11,7 +11,7 @@
 namespace monitor_client {
 	class EventHandler {
 	public:
-		explicit EventHandler(std::shared_ptr<NotifyQueue> notify_queue);
+		explicit EventHandler(const std::shared_ptr<NotifyQueue>& notify_queue);
 
 		EventHandler(const EventHandler&) = default;
 		EventHandler& operator=(const EventHandler&) = default;

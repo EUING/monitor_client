@@ -253,8 +253,8 @@ namespace monitor_client {
 		std::queue<DeleteInfo> folder_list;
 
 		int parent_id = result.value();
-		delete_list.push_back(std::make_pair(item_name, parent_id));
-		folder_list.push(std::make_pair(item_name, parent_id));
+		delete_list.push_back({ item_name, parent_id });
+		folder_list.push({ item_name, parent_id });
 
 		while (folder_list.size() > 0) {
 			DeleteInfo delete_info = folder_list.front();
@@ -275,7 +275,7 @@ namespace monitor_client {
 
 			const auto& contain_list = get_contain_list.value();
 			for (const auto& contain : contain_list) {
-				DeleteInfo contain_delete_info = std::make_pair(contain.name, item_id);
+				DeleteInfo contain_delete_info{ contain.name, item_id };
 				delete_list.push_back(contain_delete_info);
 
 				if (contain.size < 0) {

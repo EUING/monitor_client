@@ -13,7 +13,7 @@
 namespace monitor_client {
 	class FolderWatcher {
 	public:
-		FolderWatcher(std::shared_ptr<NotifyQueue> notify_queue, const std::wstring& watch_folder = L"");
+		FolderWatcher(const std::shared_ptr<NotifyQueue>& notify_queue, const std::wstring& watch_folder = L"");
 
 		FolderWatcher(const FolderWatcher&) = delete;
 		FolderWatcher& operator=(const FolderWatcher&) = delete;

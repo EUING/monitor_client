@@ -13,12 +13,11 @@
 #include "item_http.h"
 
 namespace monitor_client {
-	ItemManager::ItemManager(std::shared_ptr<NotifyQueue> notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao) :
+	ItemManager::ItemManager(const std::shared_ptr<NotifyQueue>& notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao) :
 		thread_future_{}, 
 		notify_queue_(notify_queue), 
 		item_http_(network_info),
 		local_db_(std::move(item_dao)) {
-
 	}
 
 	ItemManager::~ItemManager() {

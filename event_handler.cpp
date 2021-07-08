@@ -11,7 +11,7 @@
 #include "notify_queue.h"
 
 namespace monitor_client {
-	EventHandler::EventHandler(std::shared_ptr<NotifyQueue> notify_queue) : notify_queue_(notify_queue) {
+	EventHandler::EventHandler(const std::shared_ptr<NotifyQueue>& notify_queue) : notify_queue_(notify_queue) {
 	}
 
 	void EventHandler::PushEvent(const uint8_t* buffer) {

@@ -14,7 +14,7 @@
 namespace monitor_client {
 	class ItemManager {
 	public:
-		ItemManager(std::shared_ptr<NotifyQueue> notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao);
+		ItemManager(const std::shared_ptr<NotifyQueue>& notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao);
 
 		ItemManager(const ItemManager&) = delete;
 		ItemManager& operator=(const ItemManager&) = delete;

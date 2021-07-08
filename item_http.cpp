@@ -12,6 +12,50 @@ namespace monitor_client {
 		builder_.set_scheme(U("http")).set_host(info.host).set_port(info.port);
 	}
 
+	std::optional<std::vector<common_utility::ItemInfo>> ItemHttp::GetFolderContainList(const std::wstring& relative_path /*= L""*/) const {
+		utility::string_t path_variable = kItemEndPoint;
+		path_variable.append(U("/contain/"));
+		if (relative_path.empty()) {
+			path_variable.pop_back();
+		}
+		else {
+			path_variable.append(relative_path);
+		}
+
+		web::http::uri_builder builder(builder_);
+		builder.set_path(path_variable, true);
+
+		web::http::client::http_client client(builder.to_uri());
+		web::http::http_response response = client.request(web::http::methods::GET).get();
+		if (response.status_code() == web::http::status_codes::OK) {
+			web::json::value json_object = response.extract_json().get();
+			if (!json_object.is_array()) {
+				return std::nullopt;
+			}
+
+			std::vector<common_utility::ItemInfo> item_list;
+			web::json::array arr = json_object.as_array();
+			for (auto iter : arr) {
+				if (!iter.is_object()) {
+					return std::nullopt;
+				}
+
+				common_utility::ItemInfo info;
+				web::json::object object = iter.as_object();
+				info.name = object[U("name")].as_string();
+				info.size = object[U("size")].as_integer();
+				info.hash = object[U("hash")].as_string();
+
+				item_list.push_back(info);
+			}
+
+			return item_list;
+		}
+
+		std::wcerr << L"ItemHttp::InsertItem: request Fail" << std::endl;
+		return std::nullopt;
+	}
+
 	bool ItemHttp::InsertItem(const common_utility::ItemInfo& item_info) {
 		web::json::value put_data;
 		put_data[U("size")] = web::json::value::number(item_info.size);
@@ -21,8 +65,9 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(item_info.name);
 
-		builder_.set_path(path_variable, true);
-		web::http::client::http_client client(builder_.to_uri());
+		web::http::uri_builder builder(builder_);
+		builder.set_path(path_variable, true);
+		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PUT, U("/"), put_data).get();
 		switch (response.status_code()) {
 		case web::http::status_codes::OK:
@@ -42,8 +87,9 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(name_info.old_name);
 
-		builder_.set_path(path_variable, true);
-		web::http::client::http_client client(builder_.to_uri());
+		web::http::uri_builder builder(builder_);
+		builder.set_path(path_variable, true);
+		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PATCH, U("/"), patch_data).get();
 		if (response.status_code() == web::http::status_codes::OK) {
 			return true;
@@ -58,8 +104,9 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(relative_path);
 
-		builder_.set_path(path_variable, true);
-		web::http::client::http_client client(builder_.to_uri());
+		web::http::uri_builder builder(builder_);
+		builder.set_path(path_variable, true);
+		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::DEL).get();
 		switch (response.status_code()) {
 		case web::http::status_codes::OK:
