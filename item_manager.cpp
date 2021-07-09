@@ -16,8 +16,7 @@ namespace monitor_client {
 	ItemManager::ItemManager(const std::shared_ptr<NotifyQueue>& notify_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao) :
 		thread_future_{}, 
 		notify_queue_(notify_queue), 
-		item_http_(network_info),
-		local_db_(std::move(item_dao)) {
+		item_request_(network_info, std::move(item_dao)) {
 	}
 
 	ItemManager::~ItemManager() {
@@ -79,13 +78,8 @@ namespace monitor_client {
 			auto item_info = item_info_opt.value();
 
 			std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
-			if (!item_http_.InsertItem(item_info)) {
-				std::wcerr << L"ItemManager::ManagementItem: item_http_.InsertItem Fail: " << item_info.name << std::endl;
-				return false;
-			}
-
-			if (!local_db_.InsertItem(item_info)) {
-				std::wcerr << L"ItemManager::ManagementItem: local_db_.InsertItem Fail: " << item_info.name << std::endl;
+			if (!item_request_.UploadRequest(item_info)) {
+				std::wcerr << L"ItemManager::ManagementItem: UploadRequest Fail: " << item_info.name << std::endl;
 				return false;
 			}
 
@@ -98,13 +92,8 @@ namespace monitor_client {
 				std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
 				std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
 
-				if (!item_http_.RenameItem(change_name_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: item_http_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
-					return false;
-				}
-
-				if (!local_db_.RenameItem(change_name_info)) {
-					std::wcerr << L"ItemManager::ManagementItem: local_db_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
+				if (!item_request_.RenameRequest(change_name_info)) {
+					std::wcerr << L"ItemManager::ManagementItem: RenameRequest Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
 					return false;
 				}
 			}
@@ -113,13 +102,9 @@ namespace monitor_client {
 		case FILE_ACTION_REMOVED: {
 			std::wstring item_path = info.relative_path;
 			std::replace(item_path.begin(), item_path.end(), L'\\', L'/');  // Window path to Posix path
-			if (!item_http_.RemoveItem(item_path)) {
-				std::wcerr << L"ItemManager::ManagementItem: item_http_.RemoveItem Fail: " << item_path << std::endl;
-				return false;
-			}
 
-			if (!local_db_.RemoveItem(item_path)) {
-				std::wcerr << L"ItemManager::ManagementItem: local_db_.RemoveItem Fail: " << item_path << std::endl;
+			if (!item_request_.RemoveRequest(item_path)) {
+				std::wcerr << L"ItemManager::ManagementItem: RemoveRequest Fail: " << item_path << std::endl;
 				return false;
 			}
 			break;

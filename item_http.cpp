@@ -85,7 +85,7 @@ namespace monitor_client {
 		return std::nullopt;
 	}
 
-	bool ItemHttp::InsertItem(const common_utility::ItemInfo& item_info) {
+	bool ItemHttp::UpdateItem(const common_utility::ItemInfo& item_info) {
 		web::json::value put_data;
 		put_data[U("size")] = web::json::value::number(item_info.size);
 		put_data[U("hash")] = web::json::value::string(item_info.hash);
@@ -104,7 +104,7 @@ namespace monitor_client {
 			return true;
 		}
 
-		std::wcerr << L"ItemHttp::InsertItem: request Fail" << std::endl;
+		std::wcerr << L"ItemHttp::UpdateItem: request Fail" << std::endl;
 		return false;
 	}
 
