@@ -8,7 +8,7 @@
 #include <queue>
 #include <string>
 
-#include "common_utility.h"
+#include "common_struct.h"
 
 namespace monitor_client {
 	class NotifyQueue {

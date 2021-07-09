@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "common_utility.h"
+#include "common_struct.h"
 #include "item_http.h"
 #include "local_db.h"
 

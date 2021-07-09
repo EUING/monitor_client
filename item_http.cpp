@@ -1,5 +1,6 @@
 #include "item_http.h"
 
+#include <optional>
 #include <iostream>
 #include <string>
 

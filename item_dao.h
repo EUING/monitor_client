@@ -2,8 +2,10 @@
 #define MONITOR_CLIENT_ITEM_DAO_H_
 
 #include <optional>
+#include <vector>
+#include <string>
 
-#include "common_utility.h"
+#include "common_struct.h"
 
 namespace monitor_client {
 	class ItemDao {

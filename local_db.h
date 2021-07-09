@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "item_dao.h"
-#include "common_utility.h"
+#include "common_struct.h"
 
 namespace monitor_client {
 	class LocalDb {

@@ -1,22 +1,13 @@
 #ifndef MONITOR_CLIENT_DIFF_CHECK_H_
 #define MONITOR_CLIENT_DIFF_CHECK_H_
 
-#include <unordered_set>
 #include <vector>
 #include <string>
 
+#include "common_struct.h"
 #include "common_utility.h"
-#include "item_http.h"
-#include "local_db.h"
 
 namespace monitor_client {
-namespace common_utility {
-	using ItemList = std::unordered_set<common_utility::ItemInfo>;
-	void GetSubFolderInfo(const std::wstring& folder_path, ItemList& item_list);
-	void GetSubFolderInfo(const LocalDb& local_db, const std::wstring& folder_path, ItemList& item_list);
-	void GetSubFolderInfo(const ItemHttp& item_http, const std::wstring& folder_path, ItemList& item_list);
-}  // namespace common_utility
-
 namespace diff_check {
 	struct DiffInfo {
 		std::wstring prev_hash;

@@ -1,6 +1,5 @@
 #include "item_request.h"
 
-#include "common_utility.h"
 #include "item_http.h"
 #include "local_db.h"
 
