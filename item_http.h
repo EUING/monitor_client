@@ -2,10 +2,11 @@
 #define MONITOR_CLIENT_ITEM_HTTP_H_
 
 #include <string>
+#include <optional>
 
 #include <cpprest/http_client.h>
 
-#include "common_utility.h"
+#include "common_struct.h"
 
 namespace monitor_client {
 	class ItemHttp {

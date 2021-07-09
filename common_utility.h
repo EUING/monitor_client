@@ -1,58 +1,27 @@
 #ifndef MONITOR_CLIENT_COMMON_UTILITY_H_
 #define MONITOR_CLIENT_COMMON_UTILITY_H_
 
-#include <Windows.h>
-#include <stdint.h>
-
-#include <memory>
+#include <unordered_set>
 #include <optional>
-#include <string>
 #include <vector>
+#include <memory>
+
+#include "common_struct.h"
+#include "local_db.h"
+#include "item_http.h"
 
 namespace monitor_client {
-namespace common_utility {
-	struct ItemInfo {
-		std::wstring name;
-		int64_t size;
-		std::wstring hash;
+namespace common_utility {	
+	using ItemList = std::unordered_set<common_utility::ItemInfo>;
+	void GetSubFolderInfo(const std::wstring& folder_path, ItemList& item_list);
+	void GetSubFolderInfo(const LocalDb& local_db, const std::wstring& folder_path, ItemList& item_list);
+	void GetSubFolderInfo(const ItemHttp& item_http, const std::wstring& folder_path, ItemList& item_list);
 
-		friend bool operator==(const ItemInfo& lhs, const ItemInfo& rhs);
-	};
-}  // namespace common_utility
-}  // namespace monitor_client
-
-namespace std {
-	template<>
-	struct hash<monitor_client::common_utility::ItemInfo> {
-		size_t operator() (const monitor_client::common_utility::ItemInfo& info) const noexcept {
-			hash<wstring> hash_func;
-			return hash_func(info.name);
-		}
-	};
-}  // namespace std
-
-namespace monitor_client {
-namespace common_utility {
-	struct ChangeItemInfo {
-		DWORD action;
-		std::wstring relative_path;
-	};
-
-	struct ChangeNameInfo {
-		std::wstring old_name;
-		std::wstring new_name;
-	};	
-
-	struct NetworkInfo {
-		std::wstring host;
-		int port;
-	};
-	
-	std::optional<bool> IsDirectory(const std::wstring& path);
 	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path);
-	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path);
-	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name);
 	std::optional<std::wstring> GetSha256(std::wstring file_path);
+	std::optional<bool> IsDirectory(const std::wstring& path);
+	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path);
+	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name);	
 
 	template<typename ... Args>
 	std::wstring format_wstring(const std::wstring& format, Args ... args)

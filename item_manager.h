@@ -6,7 +6,7 @@
 #include <future>
 #include <string>
 
-#include "common_utility.h"
+#include "common_struct.h"
 #include "item_request.h"
 #include "notify_queue.h"
 

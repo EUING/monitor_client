@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <vector>
 #include <algorithm>
@@ -15,18 +14,68 @@
 
 namespace monitor_client {
 namespace common_utility {
-	bool operator==(const ItemInfo& lhs, const ItemInfo& rhs) {
-		return lhs.name == rhs.name;
-	}
+	void GetSubFolderInfo(const std::wstring& folder_path, ItemList& item_list) {
+		WIN32_FIND_DATA find_data;
+		std::wstring fname = folder_path + L"/*.*";
 
-	std::optional<bool> IsDirectory(const std::wstring& path) {
-		DWORD attribute = GetFileAttributes(path.c_str());
-		if (INVALID_FILE_ATTRIBUTES == attribute) {
-			std::wcerr << L"common_utility::IsDirectory: GetFileAttributes Fail: " << path << std::endl;
-			return std::nullopt;
+		HANDLE handle = FindFirstFile(fname.c_str(), &find_data);
+		if (INVALID_HANDLE_VALUE != handle) {
+			do {
+				std::wstring file_name(find_data.cFileName);
+				if (L"." == file_name || L".." == file_name) {
+					continue;
+				}
+
+				std::wstring relative_path_name = (folder_path == L".") || (folder_path == L"..") ? file_name : folder_path + L'/' + file_name;
+				std::optional<ItemInfo> item_info = GetItemInfo(relative_path_name);
+				if (!item_info.has_value()) {
+					std::wcerr << L"common_utility::GetSubFolderInfo: GetItemInfo Fail: " << relative_path_name << std::endl;
+					return;
+				}
+
+				item_list.insert(item_info.value());
+
+				GetSubFolderInfo(relative_path_name, item_list);
+			} while (FindNextFile(handle, &find_data));
 		}
 
-		return (attribute & FILE_ATTRIBUTE_DIRECTORY);
+		FindClose(handle);
+	}
+
+	void GetSubFolderInfo(const LocalDb& local_db, const std::wstring& folder_path, ItemList& item_list) {
+		std::optional<std::vector<common_utility::ItemInfo>> sub_item = local_db.GetFolderContainList(folder_path);
+		if (!sub_item.has_value()) {
+			std::wcerr << L"FolderSynchronizer::Sycnchronize: local_db_.GetFolderContainList Fail: " << folder_path << std::endl;
+			return;
+		}
+
+		auto sub_item_list = sub_item.value();
+		for (const auto& item : sub_item_list) {
+			std::wstring relative_path = folder_path.empty() ? item.name : folder_path + L'/' + item.name;
+			item_list.insert({ relative_path, item.size, item.hash });
+
+			if (item.size < 0) {
+				GetSubFolderInfo(local_db, relative_path, item_list);
+			}
+		}
+	}
+
+	void GetSubFolderInfo(const ItemHttp& item_http, const std::wstring& folder_path, ItemList& item_list) {
+		std::optional<std::vector<common_utility::ItemInfo>> sub_item = item_http.GetFolderContainList(folder_path);
+		if (!sub_item.has_value()) {
+			std::wcerr << L"FolderSynchronizer::Sycnchronize: local_db_.GetFolderContainList Fail: " << folder_path << std::endl;
+			return;
+		}
+
+		auto sub_item_list = sub_item.value();
+		for (const auto& item : sub_item_list) {
+			std::wstring relative_path = folder_path.empty() ? item.name : folder_path + L'/' + item.name;
+			item_list.insert({ relative_path, item.size, item.hash });
+
+			if (item.size < 0) {
+				GetSubFolderInfo(item_http, relative_path, item_list);
+			}
+		}
 	}
 
 	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path) {
@@ -59,6 +108,46 @@ namespace common_utility {
 
 		return info;
 	}
+
+	std::optional<std::wstring> GetSha256(std::wstring file_path) {
+		std::ifstream is(file_path, std::ifstream::binary);
+		if (!is) {
+			return std::nullopt;
+		}
+
+		is.seekg(0, std::ifstream::end);
+		int length = (int)is.tellg();
+		is.seekg(0, std::ifstream::beg);
+
+		std::vector<unsigned char> buffer(length, 0);
+		auto raw_pointer = buffer.data();
+		is.read(reinterpret_cast<char*>(raw_pointer), length);
+		is.close();
+
+		unsigned char digest[SHA256::DIGEST_SIZE] = { 0, };
+
+		SHA256 ctx;
+		ctx.init();
+		ctx.update(raw_pointer, length);
+		ctx.final(digest);
+
+		char buf[2 * SHA256::DIGEST_SIZE + 1] = { 0, };
+		for (int i = 0; i < SHA256::DIGEST_SIZE; i++) {
+			sprintf_s(buf + (i * 2), sizeof(buf) - (i * 2), "%02x", digest[i]);
+		}
+
+		return CA2W(buf).m_psz;
+	}
+
+	std::optional<bool> IsDirectory(const std::wstring& path) {
+		DWORD attribute = GetFileAttributes(path.c_str());
+		if (INVALID_FILE_ATTRIBUTES == attribute) {
+			std::wcerr << L"common_utility::IsDirectory: GetFileAttributes Fail: " << path << std::endl;
+			return std::nullopt;
+		}
+
+		return (attribute & FILE_ATTRIBUTE_DIRECTORY);
+	}	
 
 	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path) {
 		std::wistringstream relative_path_stream(relative_path);
@@ -117,36 +206,6 @@ namespace common_utility {
 		}
 
 		return true;
-	}
-
-	std::optional<std::wstring> GetSha256(std::wstring file_path) {
-		std::ifstream is(file_path, std::ifstream::binary);
-		if (!is) {
-			return std::nullopt;
-		}
-		
-		is.seekg(0, std::ifstream::end);
-		int length = (int)is.tellg();
-		is.seekg(0, std::ifstream::beg);
-
-		std::vector<unsigned char> buffer(length, 0);
-		auto raw_pointer = buffer.data();
-		is.read(reinterpret_cast<char*>(raw_pointer), length);
-		is.close();
-
-		unsigned char digest[SHA256::DIGEST_SIZE] = { 0, };
-			
-		SHA256 ctx;
-		ctx.init();
-		ctx.update(raw_pointer, length);
-		ctx.final(digest);
-
-		char buf[2 * SHA256::DIGEST_SIZE + 1] = { 0, };
-		for (int i = 0; i < SHA256::DIGEST_SIZE; i++) {
-			sprintf_s(buf + (i * 2), sizeof(buf) - (i * 2), "%02x", digest[i]);
-		}
-
-		return CA2W(buf).m_psz;
-	}
+	}	
 }  // namespace common_utility
 }  // namespace monitor_client
