@@ -3,7 +3,6 @@
 #include <unordered_set>
 #include <vector>
 #include <string>
-#include <set>
 
 #include "common_utility.h"
 
@@ -84,16 +83,16 @@ namespace diff_check {
 		for (const auto& os : from_os) {
 			auto db_iter = from_db.find(os);
 			if (from_db.end() == db_iter) {
-				local_diff_list.create_list.insert(os);  // DB에 해당 파일이 없는 경우
+				local_diff_list.create_list.push_back(os);  // DB에 해당 파일이 없는 경우
 			}
 			else {
 				common_utility::ItemInfo db_info = *db_iter;
 				common_utility::ItemInfo os_info = os;
 				if (db_info.hash != os_info.hash) {
-					local_diff_list.modify_list.insert({ db_info, os_info });  // DB에 파일의 해시 값이 다른 경우
+					local_diff_list.modify_list.push_back({ db_info.hash, os_info });  // DB에 파일의 해시 값이 다른 경우
 				}
 				else {
-					local_diff_list.equal_list.insert(os);
+					local_diff_list.equal_list.push_back(os);
 				}
 			}
 		}
@@ -110,7 +109,7 @@ namespace diff_check {
 			auto server_iter = from_server.find(create);
 			if (from_server.end() != server_iter) {
 				if (server_iter->hash != create.hash) {
-					server_diff_list.conflict_list.push_back({ *server_iter, create });  // 오프라인에서 생성된 파일과 서버에서 생성된 파일의 해시 값이 다른 경우
+					server_diff_list.conflict_list.push_back(create.name);  // 오프라인에서 생성된 파일과 서버에서 생성된 파일의 해시 값이 다른 경우
 				}				
 			}
 			else {
@@ -122,8 +121,8 @@ namespace diff_check {
 			copy.erase(modify.os_item);
 			auto server_iter = from_server.find(modify.os_item);
 			if (from_server.end() != server_iter) {
-				if (server_iter->hash != modify.other_item.hash) {
-					server_diff_list.conflict_list.push_back({ *server_iter, modify.os_item });  // 오프라인에서 수정된 파일의 DB 해시 값과 서버 해시 값이 다른 경우
+				if (server_iter->hash != modify.other_hash) {
+					server_diff_list.conflict_list.push_back(modify.os_item.name);  // 오프라인에서 수정된 파일의 DB 해시 값과 서버 해시 값이 다른 경우
 				}
 				else {
 					server_diff_list.upload_request_list.push_back(modify.os_item);
@@ -147,16 +146,16 @@ namespace diff_check {
 			}
 		}
 
-		std::set<std::wstring> new_server_item;
-		for (const auto& iter : copy) {
-			new_server_item.insert(iter.name);  // 생성된 파일 오름차순으로 정렬
+		for (const auto& server_create_item : copy) {  // 서버에서 생성된 파일
+			server_diff_list.download_request_list.push_back(server_create_item.name);
 		}
+		
+		std::sort(server_diff_list.upload_request_list.begin(), server_diff_list.upload_request_list.end(), 
+			[](const common_utility::ItemInfo& lhs, const common_utility::ItemInfo& rhs){
+				return lhs.name < rhs.name;
+		});
 
-		for (const auto& new_item : new_server_item) {  // 서버에서 생성된 파일
-			server_diff_list.download_request_list.push_back(new_item);
-		}
-		// XXX new_server_item에 넣어 정렬 후에 넣는것보다, vector에 모두 넣어놓고 모두 정렬하는게 더 빠릅니다.
-		// XXX 이러면 LocalDiffList.create_list에서 set을 사용할 필요도 없습니다.
+		std::sort(server_diff_list.download_request_list.begin(), server_diff_list.download_request_list.end());
 
 		return server_diff_list;
 	}

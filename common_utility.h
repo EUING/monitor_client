@@ -16,7 +16,6 @@ namespace common_utility {
 		int64_t size;
 		std::wstring hash;
 
-		friend bool operator<(const ItemInfo& lhs, const ItemInfo& rhs);
 		friend bool operator==(const ItemInfo& lhs, const ItemInfo& rhs);
 	};
 }  // namespace common_utility
@@ -25,7 +24,7 @@ namespace common_utility {
 namespace std {
 	template<>
 	struct hash<monitor_client::common_utility::ItemInfo> {
-		std::size_t operator() (const monitor_client::common_utility::ItemInfo& info) const noexcept {
+		size_t operator() (const monitor_client::common_utility::ItemInfo& info) const noexcept {
 			hash<wstring> hash_func;
 			return hash_func(info.name);
 		}
