@@ -26,6 +26,7 @@ namespace monitor_client {
 		int GetPort() const { return builder_.port(); }
 		void SetPort(int port) { builder_.set_port(port); }
 
+		std::optional<common_utility::ItemInfo> GetItemInfo(const std::wstring& relative_path = L"") const;
 		std::optional<std::vector<common_utility::ItemInfo>> GetFolderContainList(const std::wstring& relative_path = L"") const;
 		bool InsertItem(const common_utility::ItemInfo& item_info);
 		bool RenameItem(const common_utility::ChangeNameInfo& name_info);	
