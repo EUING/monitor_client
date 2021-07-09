@@ -142,7 +142,7 @@ namespace diff_check {
 				}
 			}
 			else {
-				server_diff_list.delete_list.push_back(equal.name);  // 서버에서 삭제된 파일을 수정하지 않은 경우
+				server_diff_list.remove_list.push_back(equal.name);  // 서버에서 삭제된 파일을 수정하지 않은 경우
 			}
 		}
 

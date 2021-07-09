@@ -32,7 +32,7 @@ namespace diff_check {
 	struct ServerDiffList {
 		std::vector<common_utility::ItemInfo> upload_request_list;
 		std::vector<std::wstring> download_request_list;
-		std::vector<std::wstring> delete_list;
+		std::vector<std::wstring> remove_list;
 		std::vector<std::wstring> conflict_list;
 	};
 

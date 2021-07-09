@@ -248,16 +248,16 @@ namespace monitor_client {
 			return false;
 		}
 
-		using DeleteInfo = std::pair<std::wstring, int>;
-		std::vector<DeleteInfo> delete_list;
-		std::queue<DeleteInfo> folder_list;
+		using RemoveInfo = std::pair<std::wstring, int>;
+		std::vector<RemoveInfo> remove_list;
+		std::queue<RemoveInfo> folder_list;
 
 		int parent_id = result.value();
-		delete_list.push_back({ item_name, parent_id });
+		remove_list.push_back({ item_name, parent_id });
 		folder_list.push({ item_name, parent_id });
 
 		while (folder_list.size() > 0) {
-			DeleteInfo delete_info = folder_list.front();
+			RemoveInfo delete_info = folder_list.front();
 			folder_list.pop();
 
 			result = item_dao_->GetItemId(delete_info.first, delete_info.second);
@@ -275,8 +275,8 @@ namespace monitor_client {
 
 			const auto& contain_list = get_contain_list.value();
 			for (const auto& contain : contain_list) {
-				DeleteInfo contain_delete_info{ contain.name, item_id };
-				delete_list.push_back(contain_delete_info);
+				RemoveInfo contain_delete_info{ contain.name, item_id };
+				remove_list.push_back(contain_delete_info);
 
 				if (contain.size < 0) {
 					folder_list.push(contain_delete_info);
@@ -285,7 +285,7 @@ namespace monitor_client {
 		}
 
 		int total_count = 0;
-		for (const auto& delete_info : delete_list) {
+		for (const auto& delete_info : remove_list) {
 			result = item_dao_->DeleteItemInfo(delete_info.first, delete_info.second);
 			if (!result.has_value()) {
 				std::wcerr << L"LocalDb::RemoveItem: DeleteItemInfo Fail: " << delete_info.first << L' ' << delete_info.second << std::endl;
