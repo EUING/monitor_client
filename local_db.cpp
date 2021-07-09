@@ -132,15 +132,15 @@ namespace monitor_client {
 		return get_contain_list;
 	}
 
-	bool LocalDb::InsertItem(const common_utility::ItemInfo& item_info) {
+	bool LocalDb::UpdateItem(const common_utility::ItemInfo& item_info) {
 		if (!item_dao_) {
-			std::wcerr << L"LocalDb::InsertItem: item_dao_ is null" << std::endl;
+			std::wcerr << L"LocalDb::UpdateItem: item_dao_ is null" << std::endl;
 			return false;
 		}
 
 		std::optional<int> result = GetParentId(item_info.name);
 		if (!result.has_value()) {
-			std::wcerr << L"LocalDb::InsertItem: GetParentId Fail: " << item_info.name << std::endl;
+			std::wcerr << L"LocalDb::UpdateItem: GetParentId Fail: " << item_info.name << std::endl;
 			return false;
 		}
 
@@ -148,37 +148,37 @@ namespace monitor_client {
 
 		std::wstring item_name;
 		if (!common_utility::SplitPath(item_info.name, nullptr, item_name)) {
-			std::wcerr << L"LocalDb::InsertItem: SplitPath Fail: " << item_info.name << std::endl;
+			std::wcerr << L"LocalDb::UpdateItem: SplitPath Fail: " << item_info.name << std::endl;
 			return false;
 		}
 
-		common_utility::ItemInfo insert_item_info = item_info;
-		insert_item_info.name = item_name;
+		common_utility::ItemInfo update_item_info = item_info;
+		update_item_info.name = item_name;
 
 		std::optional<common_utility::ItemInfo> is_exist = item_dao_->GetItemInfo(item_name, parent_id);
 		if (is_exist.has_value()) {
-			result = item_dao_->ModifyItemInfo(insert_item_info, parent_id);
+			result = item_dao_->ModifyItemInfo(update_item_info, parent_id);
 			if (!result.has_value()) {
-				std::wcerr << L"LocalDb::InsertItem: ModifyItemInfo Fail: " << insert_item_info.name << L' ' << parent_id << std::endl;
+				std::wcerr << L"LocalDb::UpdateItem: ModifyItemInfo Fail: " << update_item_info.name << L' ' << parent_id << std::endl;
 				return false;
 			}
 
 			int insert_count = result.value();
 			if (1 != insert_count) {
-				std::wcerr << L"LocalDb::InsertItem: ModifyItemInfo Fail: " << insert_count << std::endl;
+				std::wcerr << L"LocalDb::UpdateItem: ModifyItemInfo Fail: " << insert_count << std::endl;
 				return false;
 			}
 		}
 		else {
-			result = item_dao_->InsertItemInfo(insert_item_info, parent_id);
+			result = item_dao_->UpdateItemInfo(update_item_info, parent_id);
 			if (!result.has_value()) {
-				std::wcerr << L"LocalDb::InsertItem: InsertItemInfo Fail: " << insert_item_info.name << L' ' << parent_id << std::endl;
+				std::wcerr << L"LocalDb::UpdateItem: UpdateItemInfo Fail: " << update_item_info.name << L' ' << parent_id << std::endl;
 				return false;
 			}
 
 			int insert_count = result.value();
 			if (1 != insert_count) {
-				std::wcerr << L"LocalDb::InsertItem: InsertItemInfo Fail: " << insert_count << std::endl;
+				std::wcerr << L"LocalDb::UpdateItem: UpdateItemInfo Fail: " << insert_count << std::endl;
 				return false;
 			}
 		}		
@@ -286,9 +286,9 @@ namespace monitor_client {
 
 		int total_count = 0;
 		for (const auto& delete_info : remove_list) {
-			result = item_dao_->DeleteItemInfo(delete_info.first, delete_info.second);
+			result = item_dao_->RemoveItemInfo(delete_info.first, delete_info.second);
 			if (!result.has_value()) {
-				std::wcerr << L"LocalDb::RemoveItem: DeleteItemInfo Fail: " << delete_info.first << L' ' << delete_info.second << std::endl;
+				std::wcerr << L"LocalDb::RemoveItem: RemoveItemInfo Fail: " << delete_info.first << L' ' << delete_info.second << std::endl;
 				return false;
 			}
 

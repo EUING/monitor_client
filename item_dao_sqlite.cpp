@@ -125,32 +125,32 @@ namespace monitor_client {
 		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 
-	std::optional<int> ItemDaoSqlite::DeleteItemInfo(const std::wstring& item_name, int parent_id) {
+	std::optional<int> ItemDaoSqlite::RemoveItemInfo(const std::wstring& item_name, int parent_id) {
 		if (!sqlite_wrapper_) {
-			std::wcerr << L"ItemDaoSqlite::DeleteItemInfo: sqlite_wrapper_ is null" << std::endl;
+			std::wcerr << L"ItemDaoSqlite::RemoveItemInfo: sqlite_wrapper_ is null" << std::endl;
 			return std::nullopt;
 		}
 
 		std::wstring query = common_utility::format_wstring(L"DELETE FROM items WHERE name='%s' and parent_id=%d;", item_name.c_str(), parent_id);
 		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
 		if (sqlite_manager::SqlError::SQLITE_OK != error) {
-			std::wcerr << L"ItemDaoSqlite::DeleteItemInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
+			std::wcerr << L"ItemDaoSqlite::RemoveItemInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
 		return sqlite_wrapper_->GetLastChangeRowCount();
 	}
 
-	std::optional<int> ItemDaoSqlite::InsertItemInfo(const common_utility::ItemInfo& item_info, int parent_id) {
+	std::optional<int> ItemDaoSqlite::UpdateItemInfo(const common_utility::ItemInfo& item_info, int parent_id) {
 		if (!sqlite_wrapper_) {
-			std::wcerr << L"ItemDaoSqlite::InsertItemInfo: sqlite_wrapper_ is null" << std::endl;
+			std::wcerr << L"ItemDaoSqlite::UpdateItemInfo: sqlite_wrapper_ is null" << std::endl;
 			return std::nullopt;
 		}
 
 		std::wstring query = common_utility::format_wstring(L"INSERT INTO items(size, hash, name, parent_id) VALUES(%d, '%s', '%s', %d);", item_info.size, item_info.hash.c_str(), item_info.name.c_str(), parent_id);
 		sqlite_manager::SqlError error = sqlite_wrapper_->ExecuteUpdate(query);
 		if (sqlite_manager::SqlError::SQLITE_OK != error) {
-			std::wcerr << L"ItemDaoSqlite::InsertItemInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
+			std::wcerr << L"ItemDaoSqlite::UpdateItemInfo: ExecuteUpdate Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
 
