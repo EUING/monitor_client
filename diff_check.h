@@ -19,7 +19,7 @@ namespace common_utility {
 
 namespace diff_check {
 	struct DiffInfo {
-		std::wstring other_hash;
+		std::wstring prev_hash;
 		common_utility::ItemInfo os_item;
 	};
 

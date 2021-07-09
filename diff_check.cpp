@@ -121,7 +121,7 @@ namespace diff_check {
 			copy.erase(modify.os_item);
 			auto server_iter = from_server.find(modify.os_item);
 			if (from_server.end() != server_iter) {
-				if (server_iter->hash != modify.other_hash) {
+				if (server_iter->hash != modify.prev_hash) {
 					server_diff_list.conflict_list.push_back(modify.os_item.name);  // 오프라인에서 수정된 파일의 DB 해시 값과 서버 해시 값이 다른 경우
 				}
 				else {
