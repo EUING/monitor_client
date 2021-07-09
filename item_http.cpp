@@ -12,7 +12,7 @@ namespace monitor_client {
 		builder_.set_scheme(U("http")).set_host(info.host).set_port(info.port);
 	}
 
-	std::optional<common_utility::ItemInfo> ItemHttp::GetItemInfo(const std::wstring& relative_path /*= L""*/) const {
+	std::optional<common_utility::ItemInfo> ItemHttp::GetItemInfo(const std::wstring& relative_path) const {
 		utility::string_t path_variable = kItemEndPoint;
 		path_variable.append(U("/info/"));
 		path_variable.append(relative_path);
