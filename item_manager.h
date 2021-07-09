@@ -7,8 +7,7 @@
 #include <string>
 
 #include "common_utility.h"
-#include "item_http.h"
-#include "local_db.h"
+#include "item_request.h"
 #include "notify_queue.h"
 
 namespace monitor_client {
@@ -32,8 +31,7 @@ namespace monitor_client {
 	private:
 		std::future<void> thread_future_;
 		std::shared_ptr<NotifyQueue> notify_queue_;
-		ItemHttp item_http_;
-		LocalDb local_db_;
+		ItemRequest item_request_;
 	};
 }  // namespace monitor_client
 #endif
