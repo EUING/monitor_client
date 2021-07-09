@@ -12,6 +12,35 @@ namespace monitor_client {
 		builder_.set_scheme(U("http")).set_host(info.host).set_port(info.port);
 	}
 
+	std::optional<common_utility::ItemInfo> ItemHttp::GetItemInfo(const std::wstring& relative_path /*= L""*/) const {
+		utility::string_t path_variable = kItemEndPoint;
+		path_variable.append(U("/info/"));
+		path_variable.append(relative_path);
+
+		web::http::uri_builder builder(builder_);
+		builder.set_path(path_variable, true);
+		web::http::client::http_client client(builder.to_uri());
+		web::http::http_response response = client.request(web::http::methods::GET).get();
+		if (response.status_code() == web::http::status_codes::OK) {
+			web::json::value json_object = response.extract_json().get();
+			if (!json_object.is_object()) {
+				std::wcerr << L"ItemHttp::GetItemInfo: wrong item info" << std::endl;
+				return std::nullopt;
+			}
+
+			common_utility::ItemInfo info;
+			web::json::object object = json_object.as_object();
+			info.name = object[U("name")].as_string();
+			info.size = object[U("size")].as_integer();
+			info.hash = object[U("hash")].as_string();
+
+			return info;
+		}
+
+		std::wcerr << L"ItemHttp::GetItemInfo: request Fail" << std::endl;
+		return std::nullopt;
+	}
+
 	std::optional<std::vector<common_utility::ItemInfo>> ItemHttp::GetFolderContainList(const std::wstring& relative_path /*= L""*/) const {
 		utility::string_t path_variable = kItemEndPoint;
 		path_variable.append(U("/contain/"));
@@ -52,7 +81,7 @@ namespace monitor_client {
 			return item_list;
 		}
 
-		std::wcerr << L"ItemHttp::InsertItem: request Fail" << std::endl;
+		std::wcerr << L"ItemHttp::GetFolderContainList: request Fail" << std::endl;
 		return std::nullopt;
 	}
 
