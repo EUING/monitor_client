@@ -14,7 +14,7 @@ namespace monitor_client {
 	EventHandler::EventHandler(const std::shared_ptr<NotifyQueue>& notify_queue) : notify_queue_(notify_queue) {
 	}
 
-	void EventHandler::PushEvent(const uint8_t* buffer) {
+	void EventHandler::PushEvent(std::shared_ptr<const uint8_t[]> buffer) {
 		const FILE_NOTIFY_INFORMATION* fni = nullptr;
 		bool is_first = true;
 
@@ -27,8 +27,7 @@ namespace monitor_client {
 				PushAddEvent(name);
 				continue;
 			}
-			else
-			{
+			else {
 				std::wstring result_name;
 				if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
 					std::wstring old_name(fni->FileName, fni->FileNameLength / 2);

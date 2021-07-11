@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <stdint.h>
 
+#include <memory>
 #include <string>
 
 #include "notify_queue.h"
@@ -21,7 +22,7 @@ namespace monitor_client {
 
 		~EventHandler() = default;
 
-		void PushEvent(const uint8_t* buffer);
+		void PushEvent(std::shared_ptr<const uint8_t[]> buffer);
 
 	private:
 		void PushAddEvent(const std::wstring& relative_path);
