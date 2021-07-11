@@ -138,7 +138,7 @@ namespace monitor_client {
 			FILE_NOTIFY_CHANGE_ATTRIBUTES | FILE_NOTIFY_CHANGE_SIZE |
 			FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_CREATION;
 
-		std::unique_ptr<uint8_t[]> buffer = std::make_unique<uint8_t[]>(kBufferSize);
+		std::shared_ptr<uint8_t[]> buffer(new uint8_t[kBufferSize], std::default_delete<uint8_t[]>());
 		HANDLE handles[2] = { overlap_event, stop_watching_event_ };
 
 		OVERLAPPED overlap{ 0, };
@@ -168,7 +168,7 @@ namespace monitor_client {
 					break;
 				}
 
-				event_handler_.PushEvent(buffer.get());
+				event_handler_.PushEvent(buffer);
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
 				break;
