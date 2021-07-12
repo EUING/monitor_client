@@ -10,7 +10,7 @@
 #include "item_request.h"
 
 namespace monitor_client {
-	bool LocalRemoveEvent::operator()(ItemRequest& item_request) const {	
+	bool LocalRemoveEvent::Execute(ItemRequest& item_request) const {
 		auto perform = [](const std::wstring& relative_path) {
 			auto release = [](IUnknown* unknown) {
 				if (unknown) {
@@ -20,7 +20,7 @@ namespace monitor_client {
 
 			wchar_t buffer[MAX_PATH] = { 0, };
 			if (0 == GetFullPathName(relative_path.c_str(), sizeof(buffer) / sizeof(buffer[0]), buffer, NULL)) {
-				std::wcerr << L"LocalRemoveEvent::operator(): GetFullPathName Fail: " << relative_path << std::endl;
+				std::wcerr << L"LocalRemoveEvent::Execute: GetFullPathName Fail: " << relative_path << std::endl;
 				return false;
 			}
 
@@ -30,14 +30,14 @@ namespace monitor_client {
 
 			HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 			if (!SUCCEEDED(hr)) {
-				std::wcerr << L"LocalRemoveEvent::operator(): CoInitializeEx Fail: " << full_path << std::endl;
+				std::wcerr << L"LocalRemoveEvent::Execute: CoInitializeEx Fail: " << full_path << std::endl;
 				return false;
 			}
 
 			IFileOperation* file_operation = nullptr;
 			hr = CoCreateInstance(CLSID_FileOperation, NULL, CLSCTX_ALL, IID_PPV_ARGS(&file_operation));
 			if (!SUCCEEDED(hr)) {
-				std::wcerr << L"LocalRemoveEvent::operator(): CoCreateInstance Fail: " << full_path << std::endl;
+				std::wcerr << L"LocalRemoveEvent::Execute: CoCreateInstance Fail: " << full_path << std::endl;
 				return false;
 			}
 			file_operation_ptr.reset(file_operation);
@@ -45,21 +45,21 @@ namespace monitor_client {
 			DWORD flags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_ALLOWUNDO;
 			hr = file_operation_ptr->SetOperationFlags(flags);
 			if (!SUCCEEDED(hr)) {
-				std::wcerr << L"LocalRemoveEvent::operator(): SetOperationFlags Fail: " << full_path << std::endl;
+				std::wcerr << L"LocalRemoveEvent::Execute: SetOperationFlags Fail: " << full_path << std::endl;
 				return false;
 			}
 
 			IShellItem* item = nullptr;
 			hr = SHCreateItemFromParsingName(full_path.c_str(), NULL, IID_PPV_ARGS(&item));
 			if (!SUCCEEDED(hr)) {
-				std::wcerr << L"LocalRemoveEvent::operator(): SHCreateItemFromParsingName Fail: " << full_path << std::endl;
+				std::wcerr << L"LocalRemoveEvent::Execute: SHCreateItemFromParsingName Fail: " << full_path << std::endl;
 				return false;
 			}
 			item_ptr.reset(item);
 
 			hr = file_operation_ptr->DeleteItem(item_ptr.get(), NULL);
 			if (!SUCCEEDED(hr)) {
-				std::wcerr << L"LocalRemoveEvent::operator(): DeleteItem Fail: " << full_path << std::endl;
+				std::wcerr << L"LocalRemoveEvent::Execute: DeleteItem Fail: " << full_path << std::endl;
 				return false;
 			}
 
@@ -72,7 +72,7 @@ namespace monitor_client {
 		CoUninitialize();
 
 		if (!result) {
-			std::wcerr << L"LocalRemoveEvent::operator(): PerformOperations Fail: " << relative_path_ << std::endl;
+			std::wcerr << L"LocalRemoveEvent::Execute: PerformOperations Fail: " << relative_path_ << std::endl;
 			return false;
 		}
 

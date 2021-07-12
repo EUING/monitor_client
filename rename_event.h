@@ -20,7 +20,7 @@ namespace monitor_client {
 
 		~RenameEvent() override = default;
 
-		bool operator()(ItemRequest& item_request) const override;
+		bool Execute(ItemRequest& item_request) const override;
 
 	private:
 		common_utility::ChangeNameInfo change_name_info_;
