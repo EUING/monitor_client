@@ -22,13 +22,13 @@ namespace monitor_client {
 
 		~EventQueue();
 
-		void Push(std::unique_ptr<monitor_client::BaseEvent>&& event);
+		void Push(std::unique_ptr<const monitor_client::BaseEvent>&& event);
 		void Pop();
-		const std::unique_ptr<monitor_client::BaseEvent>& Front();
+		const std::unique_ptr<const monitor_client::BaseEvent>& Front();
 		void Break();
 
 	private:
-		std::queue<std::unique_ptr<monitor_client::BaseEvent>> event_queue_;
+		std::queue<std::unique_ptr<const monitor_client::BaseEvent>> event_queue_;
 		std::mutex notify_queue_m_;
 		std::condition_variable notify_queue_cv_;
 		bool break_;  // Pop 함수 종료를 위한 변수
