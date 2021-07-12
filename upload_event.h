@@ -18,7 +18,7 @@ namespace monitor_client {
 
 		~UploadEvent() override = default;
 
-		bool operator()(ItemRequest& item_request) const override;
+		bool Execute(ItemRequest& item_request) const override;
 
 	private:
 		common_utility::ItemInfo item_info_;

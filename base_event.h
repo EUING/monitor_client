@@ -16,7 +16,7 @@ namespace monitor_client {
 
 		virtual ~BaseEvent() = default;
 
-		virtual bool operator()(ItemRequest& item_request) const = 0;
+		virtual bool Execute(ItemRequest& item_request) const = 0;
 	};
 }  // namespace monitor_client
 #endif

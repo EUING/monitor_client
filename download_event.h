@@ -19,7 +19,7 @@ namespace monitor_client {
 
 		~DownloadEvent() override = default;
 
-		bool operator()(ItemRequest& item_request) const override;
+		bool Execute(ItemRequest& item_request) const override;
 
 	private:
 		std::wstring relative_path_;
