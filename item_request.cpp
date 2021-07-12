@@ -52,12 +52,20 @@ namespace monitor_client {
 
 	bool ItemRequest::RemoveRequest(const std::wstring& relative_path) {
 		if (!item_http_.RemoveItem(relative_path)) {
-			std::wcerr << L"ItemRequest::DeleteRequest: item_http_.RemoveItem Fail: " << relative_path << std::endl;
+			std::wcerr << L"ItemRequest::RemoveRequest: item_http_.RemoveItem Fail: " << relative_path << std::endl;
 			return false;
 		}
 
 		if (!local_db_.RemoveItem(relative_path)) {
-			std::wcerr << L"ItemRequest::DeleteRequest: local_db_.RemoveItem Fail: " << relative_path << std::endl;
+			std::wcerr << L"ItemRequest::RemoveRequest: local_db_.RemoveItem Fail: " << relative_path << std::endl;
+			return false;
+		}
+
+		return true;
+	}
+	bool ItemRequest::LocalRemoveRequest(const std::wstring& relative_path) {
+		if (!local_db_.RemoveItem(relative_path)) {
+			std::wcerr << L"ItemRequest::RemoveRequest: local_db_.RemoveItem Fail: " << relative_path << std::endl;
 			return false;
 		}
 
