@@ -17,7 +17,7 @@ namespace monitor_client {
 		Break();
 	}
 
-	void EventQueue::Push(std::unique_ptr<monitor_client::BaseEvent>&& event) {
+	void EventQueue::Push(std::unique_ptr<const monitor_client::BaseEvent>&& event) {
 		std::unique_lock lock(notify_queue_m_);
 		event_queue_.push(std::move(event));
 
@@ -29,7 +29,7 @@ namespace monitor_client {
 		event_queue_.pop();
 	}
 
-	const std::unique_ptr<monitor_client::BaseEvent>& EventQueue::Front() {
+	const std::unique_ptr<const monitor_client::BaseEvent>& EventQueue::Front() {
 		std::unique_lock lock(notify_queue_m_);
 
 		notify_queue_cv_.wait(lock, [this]() { return (!event_queue_.empty() || break_); });
