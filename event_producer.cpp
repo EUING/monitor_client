@@ -45,6 +45,8 @@ namespace monitor_client {
 					change_name_info.old_name = old_name;
 					change_name_info.new_name = new_name;
 
+					std::replace(change_name_info.old_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
+					std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
 					event_queue_->Push(std::make_unique<RenameEvent>(change_name_info));
 				}
 				else if (FILE_ACTION_MODIFIED == fni->Action) {
@@ -59,30 +61,35 @@ namespace monitor_client {
 						continue;  // 폴더 수정 이벤트는 무시
 					}
 
-					std::optional<common_utility::ItemInfo> item_info = common_utility::GetItemInfo(name);
-					if (!item_info.has_value()) {
+					std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(name);
+					if (!item_info_opt.has_value()) {
 						std::wcerr << L"WindowEventConverter::Convert: GetItemInfo Fail: " << name << std::endl;
 						continue;
 					}
 
-					event_queue_->Push(std::make_unique<UploadEvent>(item_info.value()));
+					auto item_info = item_info_opt.value();
+					std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
+					event_queue_->Push(std::make_unique<UploadEvent>(item_info));
 				}
 				else if (FILE_ACTION_REMOVED == fni->Action) {
 					std::wstring name(fni->FileName, fni->FileNameLength / 2);
+					std::replace(name.begin(), name.end(), L'\\', L'/');  // Window path to Posix path
 					event_queue_->Push(std::make_unique<RemoveEvent>(name));
 				}
 			}
 		}
 	}
 	void EventProducer::PushAddEvent(const std::wstring& relative_path) {
-		std::optional<common_utility::ItemInfo> item_info = common_utility::GetItemInfo(relative_path);
-		if (!item_info.has_value()) {
+		std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(relative_path);
+		if (!item_info_opt.has_value()) {
 			std::wcerr << L"WindowEventConverter::ConvertSubEvent: GetItemInfo Fail: " << relative_path << std::endl;
 			return;
 		}
 
-		event_queue_->Push(std::make_unique<UploadEvent>(item_info.value()));
-		if (item_info.value().size >= 0) {
+		auto item_info = item_info_opt.value();
+		std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
+		event_queue_->Push(std::make_unique<UploadEvent>(item_info));
+		if (item_info.size >= 0) {
 			return;
 		}
 

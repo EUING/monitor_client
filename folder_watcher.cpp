@@ -10,11 +10,12 @@
 #include <memory>
 
 #include "common_utility.h"
-#include "event_handler.h"
+#include "event_producer.h"
+#include "event_queue.h"
 
 namespace monitor_client {
-	FolderWatcher::FolderWatcher(const std::shared_ptr<NotifyQueue>& notify_queue, const std::wstring& watch_folder /*= L""*/)
-		: thread_future_{}, stop_watching_event_(NULL), event_handler_(notify_queue), watch_folder_(watch_folder) {
+	FolderWatcher::FolderWatcher(const std::shared_ptr<EventQueue>& event_queue, const std::wstring& watch_folder /*= L""*/)
+		: thread_future_{}, stop_watching_event_(NULL), event_producer_(event_queue), watch_folder_(watch_folder) {
 	}
 
 	FolderWatcher::~FolderWatcher() {
@@ -168,7 +169,7 @@ namespace monitor_client {
 					break;
 				}
 
-				event_handler_.PushEvent(buffer);
+				event_producer_.PushEvent(buffer);
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
 				break;
