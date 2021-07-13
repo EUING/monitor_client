@@ -11,7 +11,7 @@
 
 #include "common_utility.h"
 #include "event_producer.h"
-#include "event_queue.h"
+#include "window_event_pusher.h"
 
 namespace monitor_client {
 	FolderWatcher::FolderWatcher(const std::shared_ptr<EventQueue>& event_queue, const std::wstring& watch_folder /*= L""*/)
@@ -169,7 +169,7 @@ namespace monitor_client {
 					break;
 				}
 
-				event_producer_.PushEvent(buffer);
+				event_producer_.PushEvent(std::make_unique<WindowEventPusher>(buffer));
 			}
 			else if ((WAIT_OBJECT_0 + 1) == signal) {
 				break;
