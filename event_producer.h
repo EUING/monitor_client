@@ -7,7 +7,7 @@
 #include <string>
 
 #include "event_queue.h"
-#include "diff_check.h"
+#include "event_pusher.h"
 
 namespace monitor_client {
 	class EventProducer {
@@ -22,11 +22,7 @@ namespace monitor_client {
 
 		~EventProducer() = default;
 
-		void PushEvent(std::shared_ptr<const uint8_t[]> buffer);
-		void PushEvent(diff_check::ServerDiffList diff_list);
-
-	private:
-		void PushAddEvent(const std::wstring& relative_path);
+		void PushEvent(std::unique_ptr<EventPusher> event_pusher);
 
 		std::shared_ptr<EventQueue> event_queue_;
 	};
