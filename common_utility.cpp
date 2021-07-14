@@ -45,7 +45,7 @@ namespace common_utility {
 	void GetSubFolderInfo(const LocalDb& local_db, const std::wstring& folder_path, ItemList& item_list) {
 		std::optional<std::vector<common_utility::ItemInfo>> sub_item = local_db.GetFolderContainList(folder_path);
 		if (!sub_item.has_value()) {
-			std::wcerr << L"FolderSynchronizer::Sycnchronize: local_db_.GetFolderContainList Fail: " << folder_path << std::endl;
+			std::wcerr << L"common_utility::GetSubFolderInfo: local_db.GetFolderContainList Fail: " << folder_path << std::endl;
 			return;
 		}
 
@@ -63,7 +63,7 @@ namespace common_utility {
 	void GetSubFolderInfo(const ItemHttp& item_http, const std::wstring& folder_path, ItemList& item_list) {
 		std::optional<std::vector<common_utility::ItemInfo>> sub_item = item_http.GetFolderContainList(folder_path);
 		if (!sub_item.has_value()) {
-			std::wcerr << L"FolderSynchronizer::Sycnchronize: local_db_.GetFolderContainList Fail: " << folder_path << std::endl;
+			std::wcerr << L"common_utility::GetSubFolderInfo: item_http.GetFolderContainList Fail: " << folder_path << std::endl;
 			return;
 		}
 
