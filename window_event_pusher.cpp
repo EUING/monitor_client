@@ -43,13 +43,14 @@ namespace monitor_client {
 
 					std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
 					std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
+					std::wclog << L"WindowEventPusher RenameEvent: " << change_name_info.old_name << std::endl;
 					event_queue->Push(std::make_unique<RenameEvent>(change_name_info));
 				}
 				else if (FILE_ACTION_MODIFIED == fni->Action) {
 					std::wstring name(fni->FileName, fni->FileNameLength / 2);
 					std::optional<bool> is_dir = common_utility::IsDirectory(name);
 					if (!is_dir.has_value()) {
-						std::wcerr << L"WindowEventConverter::Convert: IsDirectory Fail: " << name << std::endl;
+						std::wcerr << L"WindowEventPusher::PushEvent: IsDirectory Fail: " << name << std::endl;
 						continue;
 					}
 
@@ -59,17 +60,19 @@ namespace monitor_client {
 
 					std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(name);
 					if (!item_info_opt.has_value()) {
-						std::wcerr << L"WindowEventConverter::Convert: GetItemInfo Fail: " << name << std::endl;
+						std::wcerr << L"WindowEventPusher::PushEvent: GetItemInfo Fail: " << name << std::endl;
 						continue;
 					}
 
 					auto item_info = item_info_opt.value();
 					std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
+					std::wclog << L"WindowEventPusher UploadEvent: " << item_info.name << std::endl;
 					event_queue->Push(std::make_unique<UploadEvent>(item_info));
 				}
 				else if (FILE_ACTION_REMOVED == fni->Action) {
 					std::wstring name(fni->FileName, fni->FileNameLength / 2);
 					std::replace(name.begin(), name.end(), L'\\', L'/');  // Window path to Posix path
+					std::wclog << L"WindowEventPusher RemoveEvent: " << name << std::endl;
 					event_queue->Push(std::make_unique<RemoveEvent>(name));
 				}
 			}
@@ -79,12 +82,13 @@ namespace monitor_client {
 	void WindowEventPusher::PushAddEvent(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
 		std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(relative_path);
 		if (!item_info_opt.has_value()) {
-			std::wcerr << L"WindowEventConverter::ConvertSubEvent: GetItemInfo Fail: " << relative_path << std::endl;
+			std::wcerr << L"WindowEventPusher::PushAddEvent: GetItemInfo Fail: " << relative_path << std::endl;
 			return;
 		}
 
 		auto item_info = item_info_opt.value();
 		std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
+		std::wclog << L"WindowEventPusher UploadEvent: " << item_info.name << std::endl;
 		event_queue->Push(std::make_unique<UploadEvent>(item_info));
 		if (item_info.size >= 0) {
 			return;
