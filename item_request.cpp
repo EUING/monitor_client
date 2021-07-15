@@ -41,13 +41,16 @@ namespace monitor_client {
 			return false;
 		}
 
-		std::optional<common_utility::ItemInfo> item_info = item_http_->GetItemInfo(relative_path);
-		if (!item_info.has_value()) {
+		std::optional<common_utility::ItemInfo> item_info_opt = item_http_->GetItemInfo(relative_path);
+		if (!item_info_opt.has_value()) {
 			std::wcerr << L"ItemRequest::DownloadRequest: item_http_.GetItemInfo Fail: " << relative_path << std::endl;
 			return false;
 		}
 
-		if (!local_db_.UpdateItem(item_info.value())) {
+		auto item_info = item_info_opt.value();
+		item_info.name = relative_path;
+
+		if (!local_db_.UpdateItem(item_info)) {
 			std::wcerr << L"ItemRequest::DownloadRequest: local_db_.UpdateItem Fail: " << relative_path << std::endl;
 			return false;
 		}
