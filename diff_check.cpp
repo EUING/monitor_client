@@ -89,5 +89,23 @@ namespace diff_check {
 
 		return server_diff_list;
 	}
+
+	ServerDiffList InitialDiffCheck(const LocalDb& local_db, std::shared_ptr<ItemHttp> item_http, const std::wstring& relative_path /*= L""*/) {
+		common_utility::ItemList os_item_list;
+
+		std::wstring window_root_path = relative_path.empty() ? L"." : relative_path;
+		common_utility::GetSubFolderInfo(window_root_path, os_item_list);
+
+		common_utility::ItemList db_item_list;
+		common_utility::GetSubFolderInfo(local_db, relative_path, db_item_list);
+
+		common_utility::ItemList server_item_list;
+		common_utility::GetSubFolderInfo(*item_http, relative_path, server_item_list);
+
+		diff_check::LocalDiffList local_diff_list = diff_check::MakeLocalDiffList(os_item_list, db_item_list);
+		diff_check::ServerDiffList server_diff_list = diff_check::MakeServerDiffList(server_item_list, local_diff_list);
+
+		return server_diff_list;
+	}
 }  // namespace diff_check
 }  // namespace monitor_client

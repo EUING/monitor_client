@@ -3,9 +3,12 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "common_struct.h"
 #include "common_utility.h"
+#include "item_http.h"
+#include "local_db.h"
 
 namespace monitor_client {
 namespace diff_check {
@@ -29,6 +32,7 @@ namespace diff_check {
 
 	LocalDiffList MakeLocalDiffList(const common_utility::ItemList& from_os, const common_utility::ItemList& from_db);
 	ServerDiffList MakeServerDiffList(const common_utility::ItemList& from_server, const LocalDiffList& local_diff_list);
+	ServerDiffList InitialDiffCheck(const LocalDb& local_db, std::shared_ptr<ItemHttp> item_http, const std::wstring& relative_path = L"");
 }  // namespace diff_check
 }  // namespace monitor_client
 #endif
