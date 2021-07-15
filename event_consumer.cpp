@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <future>
+#include <memory>
 
 #include "event_queue.h"
 #include "item_request.h"
@@ -12,6 +13,12 @@ namespace monitor_client {
 		thread_future_{}, 
 		event_queue_(event_queue),
 		item_request_(network_info, std::move(item_dao)) {
+	}
+
+	EventConsumer::EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const std::shared_ptr<ItemHttp>& item_http, LocalDb&& local_db) :
+		thread_future_{},
+		event_queue_(event_queue),
+		item_request_(item_http, std::move(local_db)) {
 	}
 
 	EventConsumer::~EventConsumer() {
