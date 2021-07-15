@@ -147,27 +147,6 @@ namespace common_utility {
 		}
 
 		return (attribute & FILE_ATTRIBUTE_DIRECTORY);
-	}	
-
-	std::optional<ChangeNameInfo> SplitChangeName(const std::wstring& relative_path) {
-		std::wistringstream relative_path_stream(relative_path);
-		std::vector<std::wstring> string_buffer;
-		std::wstring name_path;
-
-		while (std::getline(relative_path_stream, name_path, L'?')) {
-			string_buffer.push_back(name_path);
-		}
-
-		if (string_buffer.size() != 2) {
-			std::wcerr << L"common_utility::SplitChangeName Fail: " << relative_path << std::endl;
-			return std::nullopt;
-		}
-
-		ChangeNameInfo info;
-		info.old_name = string_buffer[0];
-		info.new_name = string_buffer[1];
-
-		return info;
 	}
 
 	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name) {
