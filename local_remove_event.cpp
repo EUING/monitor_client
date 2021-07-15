@@ -63,9 +63,7 @@ namespace monitor_client {
 				return false;
 			}
 
-			file_operation_ptr->PerformOperations();
-
-			return SUCCEEDED(hr);
+			return SUCCEEDED(file_operation_ptr->PerformOperations());
 		};
 
 		bool result = perform(relative_path_);
