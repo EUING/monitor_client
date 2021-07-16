@@ -43,8 +43,7 @@ namespace monitor_client {
 
 		auto row = result.value();
 		if (row.empty()) {
-			std::wcerr << L"ItemDaoSqlite::GetItemId: Can't find item: " << query << std::endl;
-			return std::nullopt;
+			return -1;  // 아이템을 찾지 못했을 경우 -1을 리턴
 		}
 
 		return _wtoi(row[0][L"id"].c_str());
@@ -62,17 +61,19 @@ namespace monitor_client {
 			std::wcerr << L"ItemDaoSqlite::GetItemInfo: ExecuteQuery Fail: " << query << L' ' << sqlite_wrapper_->GetLastError() << std::endl;
 			return std::nullopt;
 		}
-
+		
+		common_utility::ItemInfo info;
 		auto row = result.value();
 		if (row.empty()) {
-			std::wcerr << L"ItemDaoSqlite::GetItemInfo: Can't find item: " << query << std::endl;
-			return std::nullopt;
+			info.name.clear();  // 아이템을 찾지 못했을 경우 빈 문자열을 리턴
+			info.size = 0;
+			info.hash.clear();
 		}
-
-		common_utility::ItemInfo info;
-		info.name = row[0][L"name"];
-		info.size = row[0][L"size"].empty() ? -1 : _wtoi(row[0][L"size"].c_str());
-		info.hash = row[0][L"hash"];
+		else {
+			info.name = row[0][L"name"];
+			info.size = row[0][L"size"].empty() ? -1 : _wtoi(row[0][L"size"].c_str());
+			info.hash = row[0][L"hash"];
+		}		
 
 		return info;
 	}
