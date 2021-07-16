@@ -156,7 +156,12 @@ namespace monitor_client {
 		update_item_info.name = item_name;
 
 		std::optional<common_utility::ItemInfo> is_exist = item_dao_->GetItemInfo(item_name, parent_id);
-		if (is_exist.has_value()) {
+		if (!is_exist.has_value()) {
+			std::wcerr << L"LocalDb::UpdateItem: item_dao_->GetItemInfo Fail: " << item_info.name << std::endl;
+			return false;
+		}
+
+		if (!is_exist.value().name.empty()) {
 			result = item_dao_->ModifyItemInfo(update_item_info, parent_id);
 			if (!result.has_value()) {
 				std::wcerr << L"LocalDb::UpdateItem: ModifyItemInfo Fail: " << update_item_info.name << L' ' << parent_id << std::endl;
