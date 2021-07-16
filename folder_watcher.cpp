@@ -14,8 +14,8 @@
 #include "window_event_pusher.h"
 
 namespace monitor_client {
-	FolderWatcher::FolderWatcher(const std::shared_ptr<EventQueue>& event_queue, const std::wstring& watch_folder /*= L""*/)
-		: thread_future_{}, stop_watching_event_(NULL), event_producer_(event_queue), watch_folder_(watch_folder) {
+	FolderWatcher::FolderWatcher(const EventProducer& event_producer, const std::wstring& watch_folder /*= L""*/)
+		: thread_future_{}, stop_watching_event_(NULL), event_producer_(event_producer), watch_folder_(watch_folder) {
 	}
 
 	FolderWatcher::~FolderWatcher() {

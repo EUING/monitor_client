@@ -8,11 +8,12 @@
 #include <memory>
 
 #include "event_producer.h"
+#include "event_queue.h"
 
 namespace monitor_client {
 	class FolderWatcher {
 	public:
-		FolderWatcher(const std::shared_ptr<EventQueue>& event_queue, const std::wstring& watch_folder = L"");
+		FolderWatcher(const EventProducer& event_producer, const std::wstring& watch_folder = L"");
 
 		FolderWatcher(const FolderWatcher&) = delete;
 		FolderWatcher& operator=(const FolderWatcher&) = delete;
