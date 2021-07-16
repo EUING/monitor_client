@@ -1,10 +1,7 @@
 #ifndef MONITOR_CLIENT_EVENT_PRODUCER_H_
 #define MONITOR_CLIENT_EVENT_PRODUCER_H_
 
-#include <stdint.h>
-
 #include <memory>
-#include <string>
 
 #include "event_queue.h"
 #include "event_pusher.h"
