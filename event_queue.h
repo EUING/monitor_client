@@ -23,9 +23,10 @@ namespace monitor_client {
 		~EventQueue();
 
 		void Push(std::unique_ptr<const monitor_client::BaseEvent>&& event);
-		void Pop();
 		const std::unique_ptr<const monitor_client::BaseEvent>& Front();
+		void Pop();
 		void Break();
+		size_t Size() { return event_queue_.size(); }
 
 	private:
 		std::queue<std::unique_ptr<const monitor_client::BaseEvent>> event_queue_;
