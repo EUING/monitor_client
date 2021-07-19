@@ -22,21 +22,23 @@ namespace monitor_client {
 			is_first = false;
 			fni = reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(&buffer_[offset]);
 
+			std::wstring name(fni->FileName, fni->FileNameLength / 2);
+			if (common_utility::HasIgnore(name)) {
+				return;
+			}
+
 			if (FILE_ACTION_ADDED == fni->Action) {
-				std::wstring name(fni->FileName, fni->FileNameLength / 2);
 				PushAddEvent(event_filter, event_queue, name);
 				continue;
 			}
 			else {
 				if (FILE_ACTION_RENAMED_OLD_NAME == fni->Action) {
-					std::wstring old_name(fni->FileName, fni->FileNameLength / 2);
-
 					offset += fni->NextEntryOffset;
 					fni = reinterpret_cast<const FILE_NOTIFY_INFORMATION*>(&buffer_[offset]);  // NEW_NAME을 알기 위해 offset을 증가
 
 					std::wstring new_name(fni->FileName, fni->FileNameLength / 2);
 					common_utility::ChangeNameInfo change_name_info;
-					change_name_info.old_name = old_name;
+					change_name_info.old_name = name;
 					change_name_info.new_name = new_name;
 
 					std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
@@ -44,7 +46,6 @@ namespace monitor_client {
 					event_filter->RenameFilter(event_queue, change_name_info);
 				}
 				else if (FILE_ACTION_MODIFIED == fni->Action) {
-					std::wstring name(fni->FileName, fni->FileNameLength / 2);
 					std::optional<bool> is_dir = common_utility::IsDirectory(name);
 					if (!is_dir.has_value()) {
 						std::wcerr << L"WindowEventPusher::PushEvent: IsDirectory Fail: " << name << std::endl;
@@ -66,7 +67,6 @@ namespace monitor_client {
 					event_filter->UploadFilter(event_queue, item_info);
 				}
 				else if (FILE_ACTION_REMOVED == fni->Action) {
-					std::wstring name(fni->FileName, fni->FileNameLength / 2);
 					std::replace(name.begin(), name.end(), L'\\', L'/');  // Window path to Posix path
 					event_filter->RemoveFilter(event_queue, name);
 				}
@@ -75,6 +75,10 @@ namespace monitor_client {
 	}
 
 	void WindowEventPusher::PushAddEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
+		if (common_utility::HasIgnore(relative_path)) {
+			return;
+		}
+
 		std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(relative_path);
 		if (!item_info_opt.has_value()) {
 			std::wcerr << L"WindowEventPusher::PushAddEvent: GetItemInfo Fail: " << relative_path << std::endl;

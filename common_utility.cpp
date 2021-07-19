@@ -220,6 +220,15 @@ namespace common_utility {
 		}
 
 		return true;
-	}	
+	}
+
+	bool HasIgnore(const std::wstring& relative_path) {
+		return std::wstring::npos != relative_path.find(L".ignore");
+	}
+
+	bool HasConflict(const std::wstring& relative_path) {
+		return std::wstring::npos != relative_path.find(L".conflict");
+	}
+	
 }  // namespace common_utility
 }  // namespace monitor_client
