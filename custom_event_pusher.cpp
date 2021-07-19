@@ -13,25 +13,21 @@
 #include "local_remove_event.h"
 
 namespace monitor_client {
-	void CustomEventPusher::PushEvent(std::shared_ptr<EventQueue> event_queue) const {
+	void CustomEventPusher::PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const {
 		for (const auto& iter : server_diff_list_.upload_request_list) {
-			std::wclog << L"CustomEventPusher UploadEvent: " << iter.name << std::endl;
-			event_queue->Push(std::make_unique<UploadEvent>(iter));
+			event_filter->UploadFilter(event_queue, iter);
 		}
 
 		for (const auto& iter : server_diff_list_.download_request_list) {
-			std::wclog << L"CustomEventPusher DownloadEvent: " << iter << std::endl;
-			event_queue->Push(std::make_unique<DownloadEvent>(iter));
+			event_filter->DownloadFilter(event_queue, iter);
 		}
 
 		for (const auto& iter : server_diff_list_.remove_list) {
-			std::wclog << L"CustomEventPusher LocalRemoveEvent: " << iter << std::endl;
-			event_queue->Push(std::make_unique<LocalRemoveEvent>(iter));
+			event_filter->LocalRemoveFilter(event_queue, iter);
 		}
 
 		for (const auto& iter : server_diff_list_.conflict_list) {
-			std::wclog << L"CustomEventPusher ConflictEvent: " << iter << std::endl;
-			event_queue->Push(std::make_unique<ConflictEvent>(iter));
+			event_filter->ConflictFilter(event_queue, iter);
 		}
 	}
 }  // namespace monitor_client
