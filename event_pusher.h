@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "base_event_filter.h"
 #include "event_queue.h"
 
 namespace monitor_client {
@@ -18,7 +19,7 @@ namespace monitor_client {
 
 		virtual ~EventPusher() = default;
 
-		virtual void PushEvent(std::shared_ptr<EventQueue> event_queue) const = 0;
+		virtual void PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const = 0;
 	};
 }  // namespace monitor_client
 #endif

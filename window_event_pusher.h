@@ -21,10 +21,10 @@ namespace monitor_client {
 
 		~WindowEventPusher() override = default;
 
-		void PushEvent(std::shared_ptr<EventQueue> event_queue) const override;
+		void PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const override;
 
 	private:
-		void PushAddEvent(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const;
+		void PushAddEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const;
 
 		std::shared_ptr<uint8_t[]> buffer_;
 	};

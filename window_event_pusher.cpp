@@ -10,13 +10,11 @@
 
 #include "common_struct.h"
 #include "common_utility.h"
+#include "base_event_filter.h"
 #include "event_queue.h"
-#include "upload_event.h"
-#include "remove_event.h"
-#include "rename_event.h"
 
 namespace monitor_client {
-	void WindowEventPusher::PushEvent(std::shared_ptr<EventQueue> event_queue) const {
+	void WindowEventPusher::PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const {
 		const FILE_NOTIFY_INFORMATION* fni = nullptr;
 		bool is_first = true;
 
@@ -26,7 +24,7 @@ namespace monitor_client {
 
 			if (FILE_ACTION_ADDED == fni->Action) {
 				std::wstring name(fni->FileName, fni->FileNameLength / 2);
-				PushAddEvent(event_queue, name);
+				PushAddEvent(event_filter, event_queue, name);
 				continue;
 			}
 			else {
@@ -43,8 +41,7 @@ namespace monitor_client {
 
 					std::replace(change_name_info.old_name.begin(), change_name_info.old_name.end(), L'\\', L'/');  // Window path to Posix path
 					std::replace(change_name_info.new_name.begin(), change_name_info.new_name.end(), L'\\', L'/');  // Window path to Posix path
-					std::wclog << L"WindowEventPusher RenameEvent: " << change_name_info.old_name << std::endl;
-					event_queue->Push(std::make_unique<RenameEvent>(change_name_info));
+					event_filter->RenameFilter(event_queue, change_name_info);
 				}
 				else if (FILE_ACTION_MODIFIED == fni->Action) {
 					std::wstring name(fni->FileName, fni->FileNameLength / 2);
@@ -66,20 +63,18 @@ namespace monitor_client {
 
 					auto item_info = item_info_opt.value();
 					std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
-					std::wclog << L"WindowEventPusher UploadEvent: " << item_info.name << std::endl;
-					event_queue->Push(std::make_unique<UploadEvent>(item_info));
+					event_filter->UploadFilter(event_queue, item_info);
 				}
 				else if (FILE_ACTION_REMOVED == fni->Action) {
 					std::wstring name(fni->FileName, fni->FileNameLength / 2);
 					std::replace(name.begin(), name.end(), L'\\', L'/');  // Window path to Posix path
-					std::wclog << L"WindowEventPusher RemoveEvent: " << name << std::endl;
-					event_queue->Push(std::make_unique<RemoveEvent>(name));
+					event_filter->RemoveFilter(event_queue, name);
 				}
 			}
 		}
 	}
 
-	void WindowEventPusher::PushAddEvent(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
+	void WindowEventPusher::PushAddEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
 		std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(relative_path);
 		if (!item_info_opt.has_value()) {
 			std::wcerr << L"WindowEventPusher::PushAddEvent: GetItemInfo Fail: " << relative_path << std::endl;
@@ -88,8 +83,7 @@ namespace monitor_client {
 
 		auto item_info = item_info_opt.value();
 		std::replace(item_info.name.begin(), item_info.name.end(), L'\\', L'/');  // Window path to Posix path
-		std::wclog << L"WindowEventPusher UploadEvent: " << item_info.name << std::endl;
-		event_queue->Push(std::make_unique<UploadEvent>(item_info));
+		event_filter->UploadFilter(event_queue, item_info);
 		if (item_info.size >= 0) {
 			return;
 		}
@@ -106,7 +100,7 @@ namespace monitor_client {
 				}
 
 				std::wstring relative_path_name = relative_path + L"\\" + file_name;
-				PushAddEvent(event_queue, relative_path_name);
+				PushAddEvent(event_filter, event_queue, relative_path_name);
 
 			} while (FindNextFile(handle, &find_data));
 		}

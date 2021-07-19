@@ -20,7 +20,7 @@ namespace monitor_client {
 
 		~CustomEventPusher() override = default;
 
-		void PushEvent(std::shared_ptr<EventQueue> event_queue) const override;
+		void PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const override;
 
 	private:
 		diff_check::ServerDiffList server_diff_list_;
