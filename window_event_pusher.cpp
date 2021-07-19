@@ -79,6 +79,11 @@ namespace monitor_client {
 			return;
 		}
 
+		if (!common_utility::WaitTimeForAccess(relative_path)) {
+			std::wcerr << L"WindowEventPusher::PushAddEvent: WaitTimeForAccess Fail: " << relative_path << std::endl;
+			return;
+		}
+
 		std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(relative_path);
 		if (!item_info_opt.has_value()) {
 			std::wcerr << L"WindowEventPusher::PushAddEvent: GetItemInfo Fail: " << relative_path << std::endl;

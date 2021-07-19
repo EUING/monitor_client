@@ -90,7 +90,7 @@ namespace common_utility {
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 		while (true) {
 			std::unique_ptr<void, decltype((invalid_deleter))> handle_ptr(nullptr, invalid_deleter);
-			HANDLE h = CreateFile(relative_path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+			HANDLE h = CreateFile(relative_path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 			handle_ptr.reset(h);
 
 			if (handle_ptr.get() != INVALID_HANDLE_VALUE) {
