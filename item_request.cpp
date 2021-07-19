@@ -8,12 +8,12 @@
 namespace monitor_client {
 	ItemRequest::ItemRequest(const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao) : 
 		item_http_(std::make_shared<ItemHttp>(network_info)), 
-		local_db_(std::move(item_dao)) {
+		local_db_(std::make_shared<LocalDb>(std::move(item_dao))) {
 	}
 
-	ItemRequest::ItemRequest(const std::shared_ptr<ItemHttp>& item_http, LocalDb&& local_db) :
+	ItemRequest::ItemRequest(const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<LocalDb>& local_db) :
 		item_http_(item_http),
-		local_db_(std::move(local_db)) {
+		local_db_(local_db) {
 	}
 
 	bool ItemRequest::UploadRequest(const common_utility::ItemInfo& item_info) {
@@ -27,7 +27,7 @@ namespace monitor_client {
 			return false;
 		}
 
-		if (!local_db_.UpdateItem(item_info)) {
+		if (!local_db_->UpdateItem(item_info)) {
 			std::wcerr << L"ItemRequest::UploadRequest: local_db_.UpdateItem Fail: " << item_info.name << std::endl;
 			return false;
 		}
@@ -50,7 +50,7 @@ namespace monitor_client {
 		auto item_info = item_info_opt.value();
 		item_info.name = relative_path;
 
-		if (!local_db_.UpdateItem(item_info)) {
+		if (!local_db_->UpdateItem(item_info)) {
 			std::wcerr << L"ItemRequest::DownloadRequest: local_db_.UpdateItem Fail: " << relative_path << std::endl;
 			return false;
 		}
@@ -69,7 +69,7 @@ namespace monitor_client {
 			return false;
 		}
 
-		if (!local_db_.RenameItem(change_name_info)) {
+		if (!local_db_->RenameItem(change_name_info)) {
 			std::wcerr << L"ItemRequest::RenameRequest: local_db_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
 			return false;
 		}
@@ -88,7 +88,7 @@ namespace monitor_client {
 			return false;
 		}
 
-		if (!local_db_.RemoveItem(relative_path)) {
+		if (!local_db_->RemoveItem(relative_path)) {
 			std::wcerr << L"ItemRequest::RemoveRequest: local_db_.RemoveItem Fail: " << relative_path << std::endl;
 			return false;
 		}
@@ -96,7 +96,7 @@ namespace monitor_client {
 		return true;
 	}
 	bool ItemRequest::LocalRemoveRequest(const std::wstring& relative_path) {
-		if (!local_db_.RemoveItem(relative_path)) {
+		if (!local_db_->RemoveItem(relative_path)) {
 			std::wcerr << L"ItemRequest::RemoveRequest: local_db_.RemoveItem Fail: " << relative_path << std::endl;
 			return false;
 		}

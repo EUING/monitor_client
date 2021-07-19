@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 
+#include "event_filter.h"
 #include "common_utility.h"
 #include "diff_check.h"
 #include "item_http.h"
@@ -41,7 +42,9 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
-	std::wstring ignore_path = folder_path.append(L"\\.ignore");
+	std::wstring ignore_path = folder_path;
+
+	ignore_path.append(L"\\.ignore");
 	std::optional<bool> is_dir =  monitor_client::common_utility::IsDirectory(ignore_path);
 	if (!(is_dir.has_value() && is_dir.value())) {
 		std::wcerr << L"Please check ignore folder path: " << ignore_path << std::endl;
@@ -91,24 +94,25 @@ int main(int argc, char* argv[]) {
 	}
 
 	std::wstring db_path = ignore_path + L"\\" + db;
-	auto manager_db = std::make_unique<monitor_client::ItemDaoSqlite>();
-	if (!manager_db->OpenDatabase(db_path)) {
+	auto sqlite = std::make_unique<monitor_client::ItemDaoSqlite>();
+	if (!sqlite->OpenDatabase(db_path)) {
 		return -1;
 	}
 	
-	monitor_client::LocalDb local_db(std::move(manager_db));
+	std::shared_ptr<monitor_client::LocalDb> local_db = std::make_shared<monitor_client::LocalDb>(std::move(sqlite));
 	monitor_client::common_utility::NetworkInfo network_info{ host, _wtoi(port.c_str()) };
 	std::shared_ptr<monitor_client::ItemHttp> item_http = std::make_shared<monitor_client::ItemHttp>(network_info);
 
 	monitor_client::diff_check::ServerDiffList server_diff_list = monitor_client::diff_check::InitialDiffCheck(local_db, item_http);
 
 	auto event_queue = std::make_shared<monitor_client::EventQueue>();
-	monitor_client::EventConsumer item_manager(event_queue, item_http, std::move(local_db));	
-	if (!item_manager.Run()) {
+	monitor_client::EventConsumer event_consumer(event_queue, item_http, local_db);	
+	if (!event_consumer.Run()) {
 		return -1;
 	}
 
-	monitor_client::EventProducer event_producer(event_queue);
+	std::shared_ptr<monitor_client::BaseEventFilter> event_filter = std::make_shared<monitor_client::EventFilter>(local_db);
+	monitor_client::EventProducer event_producer(event_filter, event_queue);
 	event_producer.PushEvent(std::make_unique<monitor_client::CustomEventPusher>(server_diff_list));
 	
 	monitor_client::FolderWatcher folder_watcher(event_producer, folder_path);

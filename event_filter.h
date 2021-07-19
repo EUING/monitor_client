@@ -12,7 +12,7 @@
 namespace monitor_client {
 	class EventFilter : public BaseEventFilter {
 	public:
-		EventFilter(std::unique_ptr<ItemDao>&& item_dao) : local_db_(std::move(item_dao)), BaseEventFilter() {};
+		EventFilter(const std::shared_ptr<LocalDb>& local_db) : local_db_(local_db), BaseEventFilter() {};
 
 		EventFilter(const EventFilter&) = default;
 		EventFilter& operator=(const EventFilter&) = default;
@@ -30,7 +30,7 @@ namespace monitor_client {
 		void ConflictFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const override;
 
 	private:
-		LocalDb local_db_;
+		std::shared_ptr<LocalDb> local_db_;
 	};
 }  // namespace monitor_client
 #endif

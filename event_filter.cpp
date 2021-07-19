@@ -27,7 +27,7 @@ namespace monitor_client {
 			return;
 		}
 
-		std::optional<common_utility::ItemInfo> item_info_opt = local_db_.GetItemInfo(item_info.name);
+		std::optional<common_utility::ItemInfo> item_info_opt = local_db_->GetItemInfo(item_info.name);
 		if (!item_info_opt.has_value()) {
 			std::wcerr << L"BasicEventFilter::UploadFilter: local_db_.GetItemInfo Fail: " << item_info.name << std::endl;
 			return;
