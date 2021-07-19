@@ -17,6 +17,7 @@ namespace common_utility {
 	void GetSubFolderInfo(const LocalDb& local_db, const std::wstring& folder_path, ItemList& item_list);
 	void GetSubFolderInfo(const ItemHttp& item_http, const std::wstring& folder_path, ItemList& item_list);
 
+	bool WaitTimeForAccess(const std::wstring& relative_path, int time = 1000 /*ms*/);
 	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path);
 	std::optional<std::wstring> GetSha256(std::wstring file_path);
 	std::optional<bool> IsDirectory(const std::wstring& path);

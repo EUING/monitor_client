@@ -9,6 +9,9 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
+#include <chrono>
+#include <memory>
+#include <thread>
 
 #include "sha256.h"
 
@@ -76,6 +79,38 @@ namespace common_utility {
 				GetSubFolderInfo(item_http, relative_path, item_list);
 			}
 		}
+	}
+
+	bool WaitTimeForAccess(const std::wstring& relative_path, int time /*= 1000 ms*/) {
+		auto invalid_deleter = [](HANDLE handle) {
+			if (INVALID_HANDLE_VALUE != handle)
+				CloseHandle(handle);
+		};
+
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+		while (true) {
+			std::unique_ptr<void, decltype((invalid_deleter))> handle_ptr(nullptr, invalid_deleter);
+			HANDLE h = CreateFile(relative_path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+			handle_ptr.reset(h);
+
+			if (handle_ptr.get() != INVALID_HANDLE_VALUE) {
+				return true;
+			}
+			else if (GetLastError() != ERROR_SHARING_VIOLATION) {
+				std::wcerr << L"common_utility::WaitTimeForAccess: CreateFile Fail: " << relative_path << std::endl;
+				break;
+			}
+			else {
+				std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+				if (sec.count() * 1000 > time) {
+					break;
+				}
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
+		}
+
+		return false;  // time_out or CreateFile Error
 	}
 
 	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path) {
