@@ -38,6 +38,7 @@ namespace monitor_client {
 			return;
 		}
 
+		std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
 		event_queue->Push(std::make_unique<UploadEvent>(item_info));
 	}
 
@@ -46,6 +47,7 @@ namespace monitor_client {
 			return;
 		}
 
+		std::wclog << L"EventFilter DownloadEvent: " << relative_path << std::endl;
 		event_queue->Push(std::make_unique<DownloadEvent>(relative_path));
 	}
 
@@ -65,15 +67,18 @@ namespace monitor_client {
 			return;  // 충돌로 인해 생긴 Event이므로 무시
 		}
 		else if (has_old) {
-			std::optional<common_utility::ItemInfo> item_info = common_utility::GetItemInfo(change_name_info.new_name);
-			if (!item_info.has_value()) {
+			std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(change_name_info.new_name);
+			if (!item_info_opt.has_value()) {
 				std::wcerr << L"BasicEventFilter::RenameFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
 				return;
 			}
 
-			event = std::make_unique<UploadEvent>(item_info.value());  // 사용자가 충돌을 해결하여 파일명을 수정한 경우
+			auto item_info = item_info_opt.value();
+			std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
+			event = std::make_unique<UploadEvent>(item_info);  // 사용자가 충돌을 해결하여 파일명을 수정한 경우
 		}
 		else {
+			std::wclog << L"EventFilter RenameEvent: " << change_name_info.old_name << std::endl;
 			event = std::make_unique<RenameEvent>(change_name_info);  // 충돌이 없는 파일에 대한 파일명 수정
 		}
 
@@ -85,7 +90,8 @@ namespace monitor_client {
 			return;
 		}
 
-		event_queue->Push(std::make_unique<DownloadEvent>(relative_path));
+		std::wclog << L"EventFilter RemoveEvent: " << relative_path << std::endl;
+		event_queue->Push(std::make_unique<RemoveEvent>(relative_path));
 	}
 
 	void EventFilter::LocalRemoveFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
@@ -93,6 +99,7 @@ namespace monitor_client {
 			return;
 		}
 
+		std::wclog << L"EventFilter LocalRemoveEvent: " << relative_path << std::endl;
 		event_queue->Push(std::make_unique<LocalRemoveEvent>(relative_path));
 	}
 
@@ -101,6 +108,7 @@ namespace monitor_client {
 			return;
 		}
 
+		std::wclog << L"EventFilter ConflictEvent: " << relative_path << std::endl;
 		event_queue->Push(std::make_unique<ConflictEvent>(relative_path));
 	}
 }  // namespace monitor_client
