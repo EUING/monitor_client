@@ -32,6 +32,12 @@ namespace common_utility {
 		std::wstring host;
 		int port;
 	};
+
+	struct S3Info {
+		std::wstring id;
+		std::wstring password;
+		std::wstring bucket;
+	};
 }  // namespace common_utility
 }  // namespace monitor_client
 
