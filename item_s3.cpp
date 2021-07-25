@@ -72,7 +72,7 @@ namespace monitor_client {
 		request.SetBucket(CW2A(bucket_name_.c_str(), CP_UTF8).m_psz);
 		request.SetKey(CW2A(item_info.hash.c_str(), CP_UTF8).m_psz);
 
-		Aws::String item_name = CW2A(item_info.name.c_str(), CP_UTF8).m_psz;
+		Aws::String item_name = CW2A(item_info.name.c_str()).m_psz;
 		std::shared_ptr<Aws::FStream> input_data = Aws::MakeShared<Aws::FStream>("PutObjectInputStream", item_name.c_str(), std::ios_base::in | std::ios_base::binary);
 		request.SetBody(input_data);
 
@@ -82,7 +82,7 @@ namespace monitor_client {
 			std::wstring exception = CA2W(err.GetExceptionName().c_str(), CP_UTF8).m_psz;
 			std::wstring message = CA2W(err.GetMessageW().c_str(), CP_UTF8).m_psz;
 
-			std::wcerr << L"ItemS3::GetItem: GetObjectW Fail: " << exception << L": " << message << std::endl;
+			std::wcerr << L"ItemS3::PutItem: PutObject Fail: " << exception << L": " << message << std::endl;
 			return false;
 		}
 
