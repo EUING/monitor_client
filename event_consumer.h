@@ -3,17 +3,16 @@
 
 #include <memory>
 #include <future>
-#include <string>
 
-#include "common_struct.h"
-#include "item_request.h"
 #include "event_queue.h"
+#include "item_request.h"
+#include "item_s3.h"
+#include "local_db.h"
 
 namespace monitor_client {
 	class EventConsumer {
 	public:
-		EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao);
-		EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<LocalDb>& local_db);
+		EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<ItemS3>& item_s3, const std::shared_ptr<LocalDb>& local_db);
 
 		EventConsumer(const EventConsumer&) = delete;
 		EventConsumer& operator=(const EventConsumer&) = delete;
