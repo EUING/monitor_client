@@ -1,4 +1,3 @@
-#define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
 #include "item_s3.h"
 
 #include <Windows.h>

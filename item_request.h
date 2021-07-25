@@ -7,12 +7,12 @@
 #include "common_struct.h"
 #include "item_http.h"
 #include "local_db.h"
+#include "item_s3.h"
 
 namespace monitor_client {
 	class ItemRequest {
 	public:
-		ItemRequest(const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao);
-		ItemRequest(const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<LocalDb>& local_db);
+		ItemRequest(const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<ItemS3>& item_s3, const std::shared_ptr<LocalDb>& local_db);
 
 		ItemRequest(const ItemRequest&) = delete;
 		ItemRequest& operator=(const ItemRequest&) = delete;
@@ -30,6 +30,7 @@ namespace monitor_client {
 
 	private:
 		std::shared_ptr<ItemHttp> item_http_;
+		std::shared_ptr<ItemS3> item_s3_;
 		std::shared_ptr<LocalDb> local_db_;
 	};
 }  // namespace monitor_client

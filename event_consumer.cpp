@@ -7,18 +7,14 @@
 
 #include "event_queue.h"
 #include "item_request.h"
+#include "item_s3.h"
+#include "local_db.h"
 
 namespace monitor_client {
-	EventConsumer::EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const common_utility::NetworkInfo& network_info, std::unique_ptr<ItemDao>&& item_dao) :
-		thread_future_{}, 
-		event_queue_(event_queue),
-		item_request_(network_info, std::move(item_dao)) {
-	}
-
-	EventConsumer::EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<LocalDb>& local_db) :
+	EventConsumer::EventConsumer(const std::shared_ptr<EventQueue>& event_queue, const std::shared_ptr<ItemHttp>& item_http, const std::shared_ptr<ItemS3>& item_s3, const std::shared_ptr<LocalDb>& local_db) :
 		thread_future_{},
 		event_queue_(event_queue),
-		item_request_(item_http, local_db) {
+		item_request_(item_http, item_s3, local_db) {
 	}
 
 	EventConsumer::~EventConsumer() {
