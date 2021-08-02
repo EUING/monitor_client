@@ -1,7 +1,6 @@
 #ifndef MONITOR_CLIENT_COMMON_STRUCT_H_
 #define MONITOR_CLIENT_COMMON_STRUCT_H_
 
-#include <Windows.h>
 #include <stdint.h>
 
 #include <string>
@@ -16,11 +15,6 @@ namespace common_utility {
 		friend bool operator==(const ItemInfo& lhs, const ItemInfo& rhs) {
 			return lhs.name == rhs.name;
 		}
-	};
-
-	struct ChangeItemInfo {
-		DWORD action;
-		std::wstring relative_path;
 	};
 
 	struct ChangeNameInfo {
