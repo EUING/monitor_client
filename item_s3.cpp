@@ -41,11 +41,11 @@ namespace monitor_client {
 		request.SetBucket(CW2A(bucket_name_.c_str(), CP_UTF8).m_psz);
 		request.SetKey(CW2A(item_info.hash.c_str(), CP_UTF8).m_psz);
 
-		Aws::S3::Model::GetObjectOutcome outcome = client_->GetObjectW(request);
+		Aws::S3::Model::GetObjectOutcome outcome = client_->GetObject(request);
 		if (!outcome.IsSuccess()) {
 			Aws::S3::S3Error err = outcome.GetError();
 			std::wstring exception = CA2W(err.GetExceptionName().c_str(), CP_UTF8).m_psz;
-			std::wstring message = CA2W(err.GetMessageW().c_str(), CP_UTF8).m_psz;
+			std::wstring message = CA2W(err.GetMessage().c_str(), CP_UTF8).m_psz;
 
 			std::wcerr << L"ItemS3::GetItem: GetObjectW Fail: " << exception << L": " << message << std::endl;
 			return false;
@@ -79,7 +79,7 @@ namespace monitor_client {
 		if (!outcome.IsSuccess()) {
 			Aws::S3::S3Error err = outcome.GetError();
 			std::wstring exception = CA2W(err.GetExceptionName().c_str(), CP_UTF8).m_psz;
-			std::wstring message = CA2W(err.GetMessageW().c_str(), CP_UTF8).m_psz;
+			std::wstring message = CA2W(err.GetMessage().c_str(), CP_UTF8).m_psz;
 
 			std::wcerr << L"ItemS3::PutItem: PutObject Fail: " << exception << L": " << message << std::endl;
 			return false;

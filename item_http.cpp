@@ -18,7 +18,7 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(relative_path);
 
-		web::http::uri_builder builder(builder_);
+		web::uri_builder builder(builder_);
 		builder.set_path(path_variable, true);
 		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::GET).get();
@@ -52,7 +52,7 @@ namespace monitor_client {
 			path_variable.append(relative_path);
 		}
 
-		web::http::uri_builder builder(builder_);
+		web::uri_builder builder(builder_);
 		builder.set_path(path_variable, true);
 
 		web::http::client::http_client client(builder.to_uri());
@@ -95,7 +95,7 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(item_info.name);
 
-		web::http::uri_builder builder(builder_);
+		web::uri_builder builder(builder_);
 		builder.set_path(path_variable, true);
 		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PUT, U("/"), put_data).get();
@@ -117,7 +117,7 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(name_info.old_name);
 
-		web::http::uri_builder builder(builder_);
+		web::uri_builder builder(builder_);
 		builder.set_path(path_variable, true);
 		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::PATCH, U("/"), patch_data).get();
@@ -134,7 +134,7 @@ namespace monitor_client {
 		path_variable.append(U("/info/"));
 		path_variable.append(relative_path);
 
-		web::http::uri_builder builder(builder_);
+		web::uri_builder builder(builder_);
 		builder.set_path(path_variable, true);
 		web::http::client::http_client client(builder.to_uri());
 		web::http::http_response response = client.request(web::http::methods::DEL).get();
