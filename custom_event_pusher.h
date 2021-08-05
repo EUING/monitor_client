@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "base_event_filter.h"
 #include "event_pusher.h"
 #include "event_queue.h"
 #include "diff_check.h"
