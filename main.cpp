@@ -17,6 +17,7 @@
 #include "folder_watcher.h"
 #include "item_s3.h"
 #include "yaml_parser.h"
+#include "web_socket.h"
 
 const wchar_t* const kConfigFile = L"config.yaml";
 
@@ -143,7 +144,10 @@ int main(int argc, char* argv[]) {
 
 	monitor_client::common_utility::NetworkInfo minio_info{ minio_host, minio_port};
 	monitor_client::common_utility::S3Info s3_info{ minio_id, minio_password, minio_bucket };
+
+	std::wclog << L"Connecting to minio server..." << std::endl;
 	std::shared_ptr<monitor_client::ItemS3> item_s3 = std::make_shared<monitor_client::ItemS3>(minio_info, s3_info);
+	std::wclog << L"Minio server connection success" << std::endl;
 
 	auto event_queue = std::make_shared<monitor_client::EventQueue>();
 	monitor_client::EventConsumer event_consumer(event_queue, item_http, item_s3, local_db);
@@ -154,12 +158,18 @@ int main(int argc, char* argv[]) {
 	std::shared_ptr<monitor_client::BaseEventFilter> event_filter = std::make_shared<monitor_client::EventFilter>(local_db);
 	monitor_client::EventProducer event_producer(event_filter, event_queue);
 	event_producer.PushEvent(std::make_unique<monitor_client::CustomEventPusher>(server_diff_list));
+
+	monitor_client::WebSocket socket(http_info, event_producer);
+	if (!socket.Connect()) {
+		return -1;
+	}
 	
 	monitor_client::FolderWatcher folder_watcher(event_producer, folder_path);
 	if (!folder_watcher.StartWatching()) {
 		return -1;
 	}
 
+	std::wclog << L"Start to watching" << std::endl;
 	wchar_t c = L'\0';
 	while (std::wcin >> c) {
 
