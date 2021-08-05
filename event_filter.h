@@ -26,6 +26,7 @@ namespace monitor_client {
 		void DownloadFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const override;
 		void RenameFilter(std::shared_ptr<EventQueue> event_queue, const common_utility::ChangeNameInfo& change_name_info) const override;
 		void RemoveFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const override;
+		void LocalRenameFilter(std::shared_ptr<EventQueue> event_queue, const common_utility::ChangeNameInfo& change_name_info) const override;
 		void LocalRemoveFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const override;
 		void ConflictFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const override;
 

@@ -8,6 +8,7 @@
 #include "rename_event.h"
 #include "remove_event.h"
 #include "conflict_event.h"
+#include "local_rename_event.h"
 #include "local_remove_event.h"
 #include "common_utility.h"
 
@@ -132,6 +133,19 @@ namespace monitor_client {
 
 		std::wclog << L"EventFilter RemoveEvent: " << relative_path << std::endl;
 		event_queue->Push(std::make_unique<RemoveEvent>(relative_path));
+	}
+
+	void EventFilter::LocalRenameFilter(std::shared_ptr<EventQueue> event_queue, const common_utility::ChangeNameInfo& change_name_info) const {
+		if (common_utility::HasConflict(change_name_info.old_name)) {
+			return;
+		}
+
+		if (common_utility::HasConflict(change_name_info.new_name)) {
+			return;
+		}
+
+		std::wclog << L"EventFilter LocalRenameFilter: " << change_name_info.new_name << std::endl;
+		event_queue->Push(std::make_unique<LocalRenameEvent>(change_name_info));
 	}
 
 	void EventFilter::LocalRemoveFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
