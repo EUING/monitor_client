@@ -1,7 +1,5 @@
 #include "rename_event.h"
 
-#include <iostream>
-
 #include "item_request.h"
 
 namespace monitor_client {

@@ -27,6 +27,7 @@ namespace monitor_client {
 		bool RenameRequest(const common_utility::ChangeNameInfo& change_name_info);
 		bool RemoveRequest(const std::wstring& relative_path);
 		bool LocalRemoveRequest(const std::wstring& relative_path);
+		bool LocalRenameRequest(const common_utility::ChangeNameInfo& change_name_info);
 
 	private:
 		std::shared_ptr<ItemHttp> item_http_;

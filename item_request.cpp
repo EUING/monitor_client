@@ -97,4 +97,13 @@ namespace monitor_client {
 
 		return true;
 	}
+
+	bool ItemRequest::LocalRenameRequest(const common_utility::ChangeNameInfo& change_name_info) {
+		if (!local_db_->RenameItem(change_name_info)) {
+			std::wcerr << L"ItemRequest::RenameRequest: local_db_.RenameItem Fail: " << change_name_info.old_name << L'?' << change_name_info.new_name << std::endl;
+			return false;
+		}
+
+		return true;
+	}
 }  // namespace monitor_client
