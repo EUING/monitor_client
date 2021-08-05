@@ -28,16 +28,13 @@ namespace monitor_client {
 			is_connected_ = false;
 			});
 
-		client_.set_message_handler([this](web::websockets::client::websocket_incoming_message msg) {
+		client_.set_message_handler([](web::websockets::client::websocket_incoming_message msg) {
 			Concurrency::task<std::string> message = msg.extract_string();
 			web::json::value json_object = web::json::value::parse(message.get());
 			web::json::object object = json_object.as_object();
 
 			std::wstring event = object[U("event")].as_string();
-			if (L"connected" == event) {
-				is_connected_ = true;
-			}
-			else if (L"download" == event) {
+			if (L"download" == event) {
 				std::wstring name = object[U("name")].as_string();
 				int size = object[U("size")].as_integer();
 				std::wstring hash = object[U("hash")].as_string();
@@ -51,6 +48,7 @@ namespace monitor_client {
 			}
 			});
 
+		is_connected_ = true;
 		return true;
 	}
 
