@@ -1,15 +1,17 @@
 #include "web_socket.h"
 
+#include <memory>
 #include <iostream>
 #include <string>
 
 #include <cpprest/uri_builder.h>
-#include <cpprest/json.h>
 
+#include "broadcast_event_pusher.h"
+#include "event_producer.h"
 #include "common_struct.h"
 
 namespace monitor_client {
-	WebSocket::WebSocket(const common_utility::NetworkInfo& info) : builder_(), client_(), is_connected_(false) {
+	WebSocket::WebSocket(const common_utility::NetworkInfo& info, const EventProducer& event_producer) : event_producer_(event_producer), builder_(), client_(), is_connected_(false) {
 		builder_.set_scheme(U("ws")).set_host(info.host).set_port(info.port);
 	}
 
@@ -28,24 +30,10 @@ namespace monitor_client {
 			is_connected_ = false;
 			});
 
-		client_.set_message_handler([](web::websockets::client::websocket_incoming_message msg) {
+		client_.set_message_handler([this](web::websockets::client::websocket_incoming_message msg) {
 			Concurrency::task<std::string> message = msg.extract_string();
-			web::json::value json_object = web::json::value::parse(message.get());
-			web::json::object object = json_object.as_object();
-
-			std::wstring event = object[U("event")].as_string();
-			if (L"download" == event) {
-				std::wstring name = object[U("name")].as_string();
-				int size = object[U("size")].as_integer();
-				std::wstring hash = object[U("hash")].as_string();
-			}
-			else if (L"rename" == event) {
-				std::wstring old_name = object[U("old_name")].as_string();
-				std::wstring new_name = object[U("new_name")].as_string();
-			}
-			else if (L"remove" == event) {
-				std::wstring name = object[U("name")].as_string();
-			}
+			
+			event_producer_.PushEvent(std::make_unique<BroadcastEventPusher>(message.get()));
 			});
 
 		is_connected_ = true;
@@ -53,6 +41,9 @@ namespace monitor_client {
 	}
 
 	void WebSocket::Close() {
-		client_.close().wait();
+		web::websockets::client::websocket_outgoing_message msg;
+		msg.set_pong_message();
+		client_.send(msg).get();
+		client_.close().get();
 	}
 }  // namespace monitor_client
