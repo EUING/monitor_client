@@ -47,30 +47,37 @@ namespace monitor_client {
 		bool ignore_new = common_utility::HasIgnore(change_name_info.new_name);
 
 		bool conflict_old = common_utility::HasConflict(change_name_info.old_name);
-		bool conflict_new = common_utility::HasConflict(change_name_info.new_name);		
+		bool conflict_new = common_utility::HasConflict(change_name_info.new_name);
 
-		if (ignore_old && ignore_new) {
-			return;  // 둘다 있는 경우 Event 무시
-		}
-		else if (ignore_old && !ignore_new) {
-			std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(change_name_info.new_name);
+		if (!ignore_old && !ignore_new && !conflict_old && !conflict_new) {
+			std::optional<common_utility::ItemInfo> item_info_opt = local_db_->GetItemInfo(change_name_info.old_name);
 			if (!item_info_opt.has_value()) {
-				std::wcerr << L"EventFilter::RenameFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
+				std::wcerr << L"EventFilter::UploadFilter: local_db_.GetItemInfo Fail: " << change_name_info.old_name << std::endl;
 				return;
 			}
 
-			auto item_info = item_info_opt.value();
-			std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
-			event = std::make_unique<UploadEvent>(item_info);  // 사용자가 .ignore을 제거한 경우
+			auto old_item_info = item_info_opt.value();
+
+			item_info_opt = local_db_->GetItemInfo(change_name_info.new_name);
+			if (!item_info_opt.has_value()) {
+				std::wcerr << L"EventFilter::UploadFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
+				return;
+			}
+
+			auto new_item_info = item_info_opt.value();
+
+			if (old_item_info.name.empty() && !new_item_info.name.empty()) {
+				return;  // 이미 반영된 이벤트인 경우 제외
+			}
+
+			std::wclog << L"EventFilter RenameEvent: " << change_name_info.old_name << std::endl;
+			event = std::make_unique<RenameEvent>(change_name_info);  // 정상적인 파일에 대한 파일명 수정
 		}
-		else if (!ignore_old && ignore_new) {
-			event = std::make_unique<RemoveEvent>(change_name_info.old_name);  // 사용자가 파일 혹은 폴더명에 .ignore를 포함하여 수정한 경우
-		}
-		else if (!ignore_old && !ignore_new) {
-			if (conflict_old && conflict_new) {
+		else {
+			if (ignore_old && ignore_new) {
 				return;  // 둘다 있는 경우 Event 무시
 			}
-			else if (conflict_old && !conflict_new) {
+			else if (ignore_old && !ignore_new) {
 				std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(change_name_info.new_name);
 				if (!item_info_opt.has_value()) {
 					std::wcerr << L"EventFilter::RenameFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
@@ -79,14 +86,29 @@ namespace monitor_client {
 
 				auto item_info = item_info_opt.value();
 				std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
-				event = std::make_unique<UploadEvent>(item_info);  // 사용자가 충돌을 해결하여 파일명을 수정한 경우
+				event = std::make_unique<UploadEvent>(item_info);  // 사용자가 .ignore을 제거한 경우
 			}
-			else if (!conflict_old && conflict_new) {
-				return;  // 충돌로 인해 생긴 Event이므로 무시
+			else if (!ignore_old && ignore_new) {
+				event = std::make_unique<RemoveEvent>(change_name_info.old_name);  // 사용자가 파일 혹은 폴더명에 .ignore를 포함하여 수정한 경우
 			}
-			else if (!conflict_old && !conflict_new) {
-				std::wclog << L"EventFilter RenameEvent: " << change_name_info.old_name << std::endl;
-				event = std::make_unique<RenameEvent>(change_name_info);  // .conflict가 없는 파일에 대한 파일명 수정
+			else if (!ignore_old && !ignore_new) {
+				if (conflict_old && conflict_new) {
+					return;  // 둘다 있는 경우 Event 무시
+				}
+				else if (conflict_old && !conflict_new) {
+					std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(change_name_info.new_name);
+					if (!item_info_opt.has_value()) {
+						std::wcerr << L"EventFilter::RenameFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
+						return;
+					}
+
+					auto item_info = item_info_opt.value();
+					std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
+					event = std::make_unique<UploadEvent>(item_info);  // 사용자가 충돌을 해결하여 파일명을 수정한 경우
+				}
+				else if (!conflict_old && conflict_new) {
+					return;  // 충돌로 인해 생긴 Event이므로 무시
+				}
 			}
 		}		
 
@@ -96,6 +118,16 @@ namespace monitor_client {
 	void EventFilter::RemoveFilter(std::shared_ptr<EventQueue> event_queue, const std::wstring& relative_path) const {
 		if (common_utility::HasConflict(relative_path)) {
 			return;
+		}
+
+		std::optional<common_utility::ItemInfo> item_info_opt = local_db_->GetItemInfo(relative_path);
+		if (!item_info_opt.has_value()) {
+			std::wcerr << L"EventFilter::RemoveFilter: local_db_.GetItemInfo Fail: " << relative_path << std::endl;
+			return;
+		}
+
+		if (item_info_opt.value().name.empty()) {
+			return;  // 이미 반영된 이벤트인 경우 제외
 		}
 
 		std::wclog << L"EventFilter RemoveEvent: " << relative_path << std::endl;
