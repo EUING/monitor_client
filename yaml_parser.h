@@ -17,8 +17,8 @@ namespace monitor_client {
 			node_ = YAML::LoadFile(CW2A(yaml_path.c_str()).m_psz);
 		}
 
-		YamlParser(const YamlParser&) = default;
-		YamlParser& operator=(const YamlParser&) = default;
+		YamlParser(const YamlParser&) = delete;
+		YamlParser& operator=(const YamlParser&) = delete;
 
 		YamlParser(YamlParser&&) = default;
 		YamlParser& operator=(YamlParser&&) = default;
