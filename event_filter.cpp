@@ -43,20 +43,34 @@ namespace monitor_client {
 
 	void EventFilter::RenameFilter(std::shared_ptr<EventQueue> event_queue, const common_utility::ChangeNameInfo& change_name_info) const {
 		std::unique_ptr<BaseEvent> event;
-		if (common_utility::HasIgnore(change_name_info.new_name)) {
+		bool ignore_old = common_utility::HasIgnore(change_name_info.old_name);
+		bool ignore_new = common_utility::HasIgnore(change_name_info.new_name);
+
+		bool conflict_old = common_utility::HasConflict(change_name_info.old_name);
+		bool conflict_new = common_utility::HasConflict(change_name_info.new_name);		
+
+		if (ignore_old && ignore_new) {
+			return;  // 둘다 있는 경우 Event 무시
+		}
+		else if (ignore_old && !ignore_new) {
+			std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(change_name_info.new_name);
+			if (!item_info_opt.has_value()) {
+				std::wcerr << L"EventFilter::RenameFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
+				return;
+			}
+
+			auto item_info = item_info_opt.value();
+			std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
+			event = std::make_unique<UploadEvent>(item_info);  // 사용자가 .ignore을 제거한 경우
+		}
+		else if (!ignore_old && ignore_new) {
 			event = std::make_unique<RemoveEvent>(change_name_info.old_name);  // 사용자가 파일 혹은 폴더명에 .ignore를 포함하여 수정한 경우
 		}
-		else {
-			bool has_old = common_utility::HasConflict(change_name_info.old_name);
-			bool has_new = common_utility::HasConflict(change_name_info.new_name);
-
-			if (has_old && has_new) {
+		else if (!ignore_old && !ignore_new) {
+			if (conflict_old && conflict_new) {
 				return;  // 둘다 있는 경우 Event 무시
 			}
-			else if (has_new) {
-				return;  // 충돌로 인해 생긴 Event이므로 무시
-			}
-			else if (has_old) {
+			else if (conflict_old && !conflict_new) {
 				std::optional<common_utility::ItemInfo> item_info_opt = common_utility::GetItemInfo(change_name_info.new_name);
 				if (!item_info_opt.has_value()) {
 					std::wcerr << L"EventFilter::RenameFilter: local_db_.GetItemInfo Fail: " << change_name_info.new_name << std::endl;
@@ -67,9 +81,12 @@ namespace monitor_client {
 				std::wclog << L"EventFilter UploadEvent: " << item_info.name << std::endl;
 				event = std::make_unique<UploadEvent>(item_info);  // 사용자가 충돌을 해결하여 파일명을 수정한 경우
 			}
-			else {
+			else if (!conflict_old && conflict_new) {
+				return;  // 충돌로 인해 생긴 Event이므로 무시
+			}
+			else if (!conflict_old && !conflict_new) {
 				std::wclog << L"EventFilter RenameEvent: " << change_name_info.old_name << std::endl;
-				event = std::make_unique<RenameEvent>(change_name_info);  // 충돌이 없는 파일에 대한 파일명 수정
+				event = std::make_unique<RenameEvent>(change_name_info);  // .conflict가 없는 파일에 대한 파일명 수정
 			}
 		}		
 
