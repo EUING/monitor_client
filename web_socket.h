@@ -3,15 +3,16 @@
 
 #include <sdkddkver.h>
 
-#include "common_struct.h"
-
 #include <cpprest/uri_builder.h>
 #include <cpprest/ws_client.h>
+
+#include "common_struct.h"
+#include "event_producer.h"
 
 namespace monitor_client {
 	class WebSocket {
 	public:
-		explicit WebSocket(const common_utility::NetworkInfo& info);
+		WebSocket(const common_utility::NetworkInfo& info, const EventProducer& event_producer);
 
 		WebSocket(const WebSocket&) = delete;
 		WebSocket& operator=(const WebSocket&) = delete;
@@ -25,6 +26,7 @@ namespace monitor_client {
 		void Close();
 
 	private:
+		EventProducer event_producer_;
 		web::uri_builder builder_;
 		web::websockets::client::websocket_callback_client client_;
 		bool is_connected_;

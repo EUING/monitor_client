@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 
+#include "base_event_filter.h"
 #include "event_queue.h"
 #include "common_struct.h"
 #include "common_utility.h"

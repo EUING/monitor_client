@@ -300,7 +300,6 @@ namespace monitor_client {
 			total_count += result.value();
 		}
 
-		std::wclog << L"Delete item count: " << total_count << std::endl;
 		return true;
 	}
 }  // namespace monitor_client
