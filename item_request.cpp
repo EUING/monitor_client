@@ -1,7 +1,9 @@
 #include "item_request.h"
 
 #include <memory>
+#include <optional>
 
+#include "common_utility.h"
 #include "item_http.h"
 #include "local_db.h"
 #include "item_s3.h"
@@ -14,6 +16,17 @@ namespace monitor_client {
 	}
 
 	bool ItemRequest::UploadRequest(const common_utility::ItemInfo& item_info) {
+		std::optional<bool> is_valid = common_utility::IsValidItem(item_info);
+		if (!is_valid.has_value()) {
+			std::wcerr << L"ItemRequest::UploadRequest: IsValidItem Fail: " << item_info.name << std::endl;
+			return false;
+		}
+
+		if (!is_valid.value()) {
+			std::wclog << item_info.name << " is changed: Skip this event" << std::endl;
+			return true;  // 파일 정보가 계속 갱신되고 있으면 Skip
+		}
+		
 		if (item_info.size >= 0) {
 			if (item_s3_ && !item_s3_->PutItem(item_info)) {
 				std::wcerr << L"ItemRequest::UploadRequest: item_s3_.PutItem Fail: " << item_info.name << std::endl;

@@ -14,6 +14,7 @@
 #include <aws/core/auth/AWSCredentials.h>
 #include <aws/s3/model/GetObjectRequest.h>
 #include <aws/s3/model/PutObjectRequest.h>
+#include <aws/s3/model/HeadObjectRequest.h>
 
 #include "common_struct.h"
 
@@ -67,14 +68,37 @@ namespace monitor_client {
 		}
 		is.close();
 
+		std::string bucket = CW2A(bucket_name_.c_str(), CP_UTF8).m_psz;
+		std::string key = CW2A(item_info.hash.c_str(), CP_UTF8).m_psz;
+
+		Aws::S3::Model::HeadObjectRequest head_request;
+		head_request.SetBucket(bucket.c_str());
+		head_request.SetKey(key.c_str());
+		Aws::S3::Model::HeadObjectOutcome head_outcome = client_->HeadObject(head_request);
+		if (!head_outcome.IsSuccess()) {
+			Aws::S3::S3Error err = head_outcome.GetError();
+			if (err.GetResponseCode() != Aws::Http::HttpResponseCode::NOT_FOUND) {
+				std::wstring exception = CA2W(err.GetExceptionName().c_str(), CP_UTF8).m_psz;
+				std::wstring message = CA2W(err.GetMessage().c_str(), CP_UTF8).m_psz;
+
+				std::wcerr << L"ItemS3::PutItem: HeadObject Fail: " << exception << L": " << message << std::endl;
+				return false;
+			}
+		}
+		else {
+			std::wclog << item_info.name << " is already exist in s3" << std::endl;
+			return true;
+		}
+
 		Aws::S3::Model::PutObjectRequest request;
-		request.SetBucket(CW2A(bucket_name_.c_str(), CP_UTF8).m_psz);
-		request.SetKey(CW2A(item_info.hash.c_str(), CP_UTF8).m_psz);
+		request.SetBucket(bucket.c_str());
+		request.SetKey(key.c_str());
 
 		Aws::String item_name = CW2A(item_info.name.c_str()).m_psz;
 		std::shared_ptr<Aws::FStream> input_data = Aws::MakeShared<Aws::FStream>("PutObjectInputStream", item_name.c_str(), std::ios_base::in | std::ios_base::binary);
 		request.SetBody(input_data);
 
+		std::wclog << L"Put Object to s3: " << item_info.name << std::endl;
 		Aws::S3::Model::PutObjectOutcome outcome = client_->PutObject(request);
 		if (!outcome.IsSuccess()) {
 			Aws::S3::S3Error err = outcome.GetError();
