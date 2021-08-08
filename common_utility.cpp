@@ -184,6 +184,21 @@ namespace common_utility {
 		return (attribute & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
+	std::optional<bool> IsValidItem(const ItemInfo& item_info) {
+		std::optional<ItemInfo> get_item = GetItemInfo(item_info.name);
+		if (!get_item.has_value()) {
+			return std::nullopt;
+		}
+
+		auto current_item_info = get_item.value();
+
+		if (current_item_info.hash != item_info.hash) {
+			return false;
+		}
+
+		return true;
+	}
+
 	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name) {
 		if (relative_path.empty()) {
 			std::wcerr << L"common_utility::SplitPath: relative_path is empty" << std::endl;

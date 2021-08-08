@@ -21,6 +21,7 @@ namespace common_utility {
 	std::optional<ItemInfo> GetItemInfo(const std::wstring& relative_path);
 	std::optional<std::wstring> GetSha256(std::wstring file_path);
 	std::optional<bool> IsDirectory(const std::wstring& path);
+	std::optional<bool> IsValidItem(const ItemInfo& item_info);
 	bool SplitPath(const std::wstring& relative_path, std::vector<std::wstring>* split_parent_path, std::wstring& item_name);
 	bool HasIgnore(const std::wstring& relative_path);
 	bool HasConflict(const std::wstring& relative_path);
