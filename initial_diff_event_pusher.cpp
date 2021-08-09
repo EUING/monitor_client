@@ -1,4 +1,4 @@
-#include "custom_event_pusher.h"
+#include "initial_diff_event_pusher.h"
 
 #include <vector>
 #include <memory>
@@ -11,7 +11,7 @@
 #include "common_utility.h"
 
 namespace monitor_client {
-	void CustomEventPusher::PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const {
+	void InitialDiffEventPusher::PushEvent(std::shared_ptr<BaseEventFilter> event_filter, std::shared_ptr<EventQueue> event_queue) const {
 		for (const auto& iter : server_diff_list_.upload_request_list) {
 			if (!common_utility::HasIgnore(iter.name)) {
 				event_filter->UploadFilter(event_queue, iter);
