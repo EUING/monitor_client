@@ -11,7 +11,7 @@
 #include "item_http.h"
 #include "local_db.h"
 #include "event_queue.h"
-#include "custom_event_pusher.h"
+#include "initial_diff_event_pusher.h"
 #include "event_consumer.h"
 #include "item_dao_sqlite.h"
 #include "folder_watcher.h"
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 
 	std::shared_ptr<monitor_client::BaseEventFilter> event_filter = std::make_shared<monitor_client::EventFilter>(local_db);
 	monitor_client::EventProducer event_producer(event_filter, event_queue);
-	event_producer.PushEvent(std::make_unique<monitor_client::CustomEventPusher>(server_diff_list));
+	event_producer.PushEvent(std::make_unique<monitor_client::InitialDiffEventPusher>(server_diff_list));
 
 	monitor_client::WebSocket socket(http_info, event_producer);
 	if (!socket.Connect()) {
