@@ -109,6 +109,8 @@ namespace monitor_client {
 			return false;
 		}
 
+		std::wclog << L"PutObject Success: " << item_info.name << std::endl;
+
 		return true;
 	}
 
