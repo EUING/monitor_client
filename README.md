@@ -12,6 +12,10 @@
 # 3. 클래스 설명
 #### FolderWatcher
 - 특정 폴더에 대한 Window 메시지 실시간 모니터링
+#### UploadEvent, RenameEvent, RemoveEvent, DownloadEvent, ConflictEvent
+- Monitor 서버와 통신하여 처리해야 할 이벤트
+#### LocalRenameEvent, LocalRemoveEvent
+- Broadcast 수신 후 로컬 클라이언트에서 처리해야 할 이벤트
 #### EventQueue
 - 이벤트를 순차적으로 처리하기 위한 Queue
 #### EventFilter
