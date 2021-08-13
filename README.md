@@ -21,21 +21,32 @@
 #### InitialDiffEventPusher
 - 클라이언트 오프라인 상태에서의 폴더의 변경사항에 대한 데이터를 EventFilter에 전달
 #### BroadcastEventPusher
-- BroadEvent 해석 후 EventFilter에 데이터를 전달
+- Broadcast 해석 후 EventFilter에 데이터를 전달
 #### EventProducer
 - EventFilter및 EventQueue를 EventPusher에 전달
 #### ItemDaoSqlite
-- 로컬 데이터베이스에 접근하는 객체
+- Sqliite을 이용해서 로컬 데이터베이스에 접근
 #### LocalDb
 - ItemDao를 이용해서 로컬 데이터베이스를 관리
 #### ItemHttp
--  서버에 HTTP 메시지 전송
+- Monitor 서버에 HTTP 메시지 전송
 #### ItemS3
 - MinIO 서버에 공유할 파일 업/다운로드
+#### ItemRequest
+- 로컬 데이터베이스, MinIO서버, Monitor 서버와 접근 및 통신
+#### EventConsumer
+- Queue에 있는 이벤트를 지속적으로 처리
 #### WebSocket
 - 서버와 WebSocket 연결 및 Broadcast 수신
 # 4. 프로그램 요구사항 및 실행 방법
-- sample
-#### 
+1. 필요한 라이브러리
+    - cpprestsdk
+    - aws-sdk-cpp
+    - sqlite_manager
+    - yaml-cpp
+
+2. 실행 방법
+    - 모니터링할 폴더에 .ignore 폴더를 생성 후 config.yaml 파일 생성
+    - 명령 프롬프트에서 모니터링할 폴더 경로를 전달하여 monitor_client.exe 실행
 # 5. 프로젝트 구성도
 - sample
