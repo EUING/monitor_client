@@ -53,4 +53,7 @@
     - 모니터링할 폴더에 .ignore 폴더를 생성 후 config.yaml 파일 생성
     - 명령 프롬프트에서 모니터링할 폴더 경로를 전달하여 monitor_client.exe 실행
 # 5. 프로젝트 구성도
-- sample
+![슬라이드1](https://user-images.githubusercontent.com/85142102/129477519-e86e0178-b8e3-46a7-9279-5ea6ec0621b1.JPG)
+![슬라이드2](https://user-images.githubusercontent.com/85142102/129477520-63e6e14d-c8da-4f76-b508-9822955b62b4.JPG)
+![슬라이드3](https://user-images.githubusercontent.com/85142102/129477521-c7b1a2de-4588-44c7-b19a-8007b6cd5676.JPG)
+![슬라이드4](https://user-images.githubusercontent.com/85142102/129477523-1859acef-bd60-4559-8a30-97a54cef635b.JPG)
